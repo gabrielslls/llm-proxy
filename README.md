@@ -27,7 +27,7 @@ A lightweight, neutral, open-source LLM proxy tool designed for transparent toke
 ### Installation / 安装
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/llm-proxy.git
+git clone https://github.com/gabrielslls/llm-proxy.git
 cd llm-proxy
 
 # Install dependencies
