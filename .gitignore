@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+dist/
+
+# Logs
+logs/
+*.log
+proxy.out
+
+# Runtime data
+.env
+.pm2
+pm2-error.log
+pm2-out.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
