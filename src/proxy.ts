@@ -12,7 +12,7 @@ export class LLMProxy {
 
   constructor(config: ProxyConfig) {
     this.config = config;
-    this.logger = new CallLogger(config.logDir);
+    this.logger = new CallLogger(config.logDir, config.logPayloads);
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
@@ -198,6 +198,34 @@ export class LLMProxy {
     return { providerTraceId, providerRequestId, providerHeaders };
   }
 
+  private calculateCost(model: string, usage?: { promptTokens: number, completionTokens: number, totalTokens: number }): number | undefined {
+    if (!usage) return undefined;
+    
+    // 价格单位：每 1000 Tokens 的美元价格 (USD/1K Tokens)
+    let promptPrice = 0.001;
+    let completionPrice = 0.002;
+
+    const lowerModel = model.toLowerCase();
+    if (lowerModel.includes("gpt-4o")) {
+      promptPrice = 0.005;
+      completionPrice = 0.015;
+    } else if (lowerModel.includes("gpt-4")) {
+      promptPrice = 0.03;
+      completionPrice = 0.06;
+    } else if (lowerModel.includes("gpt-3.5")) {
+      promptPrice = 0.0005;
+      completionPrice = 0.0015;
+    } else if (lowerModel.includes("claude-3-5")) {
+      promptPrice = 0.003;
+      completionPrice = 0.015;
+    } else if (lowerModel.includes("deepseek")) {
+      promptPrice = 0.00014;
+      completionPrice = 0.00028;
+    }
+
+    return (usage.promptTokens * promptPrice + usage.completionTokens * completionPrice) / 1000;
+  }
+
   private async handleNonStreamingResponse(
     fetchResponse: Response,
     res: ExpressResponse,
@@ -221,6 +249,11 @@ export class LLMProxy {
       providerTraceId,
       providerRequestId,
       providerHeaders,
+      cost: this.calculateCost(record.request?.body?.model || 'unknown', {
+        promptTokens: responseBody.usage?.prompt_tokens || 0,
+        completionTokens: responseBody.usage?.completion_tokens || 0,
+        totalTokens: responseBody.usage?.total_tokens || 0
+      })
     };
 
     this.logger.log(record).catch(err => 
@@ -333,6 +366,11 @@ export class LLMProxy {
         providerTraceId,
         providerRequestId,
         providerHeaders,
+        cost: this.calculateCost(record.request?.body?.model || 'unknown', usage ? {
+          promptTokens: usage.prompt_tokens,
+          completionTokens: usage.completion_tokens,
+          totalTokens: usage.total_tokens
+        } : undefined)
       };
       this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)

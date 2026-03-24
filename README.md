@@ -14,10 +14,21 @@ A lightweight, neutral, open-source LLM proxy tool designed for transparent toke
 ## ✨ Features / 核心特性
 
 - 🔌 **Universal Forwarding**: Compatible with any OpenAI-compatible APIs. (通用转发：兼容所有 OpenAI 协议厂商)
-- 📊 **Real-time Stats**: Track input/output tokens and latency. (实时统计：追踪输入/输出 Token 及耗时)
-- 📝 **Local Logging**: Durable JSONL and readable text logs for cost auditing. (本地日志：JSONL 格式及可读文本日志，便于费用审计)
+- 📊 **Real-time Stats**: Track input/output tokens, estimated cost, and latency. (实时统计：追踪输入/输出 Token、预估费用及耗时)
+- 📝 **Local Logging**: Human-readable text logs for monitoring. Optional full payload logging (JSONL) for deep auditing. (本地日志：人类可读的监控日志。可选的完整报文日志 JSONL，用于深度审计)
 - 🛡️ **Privacy Focused**: No data sent to 3rd parties; pure observation only. (隐私保护：无第三方数据传输，仅做纯观测用途)
 - 🚫 **Vendor Neutral**: No hardcoded endpoints or bypasses. (厂商中立：不包含硬编码的接口，无绕过或破解行为)
+- 🤝 **AI Software Ready**: Optimized for OpenClaw, OpenCode, and other AI agents. (协作友好：适配 OpenClaw、OpenCode 等主流 AI 软件)
+
+## 🤝 Compatibility / 软件适配
+
+### OpenClaw / OpenCode / Cline / Continue
+Simply set the `baseURL` or `OPENAI_BASE_URL` to your proxy address:
+只需将 `baseURL` 或 `OPENAI_BASE_URL` 设置为你的代理地址：
+
+```text
+http://localhost:8000/v1
+```
 
 ## 🚀 Quick Start / 快速开始
 
@@ -40,7 +51,7 @@ npm install
 npm start -- --target https://api.openai.com/v1
 
 # Full options / 完整参数
-npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs
+npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-payloads
 ```
 
 ## 📋 Usage Example / 使用示例
@@ -61,16 +72,24 @@ curl http://localhost:8000/v1/chat/completions \
 ## 📊 Log Format / 日志格式
 
 ### 1. JSONL Log (`logs/calls.jsonl`)
-Detailed machine-readable records for each request.
-针对每个请求的详细机器可读记录。
+Detailed machine-readable records (including request/response bodies). **Disabled by default, use `--log-payloads` to enable.**
+针对每个请求的详细机器可读记录（包含请求/响应体）。**默认关闭，使用 `--log-payloads` 开启。**
 
 ### 2. Text Summary (`logs/requests.log`)
-Human-readable monitoring format.
-便于实时监控的人类可读格式。
+Human-readable monitoring format with tokens and cost.
+包含 Token 和费用的实时监控日志。
 
 ```text
-[SUCCESS #1] 2026/3/22 10:30:00 | 127.0.0.1 | gpt-3.5-turbo | Req:1.2KB | Resp:2.5KB | 10:30:02 | 200 | 1.23s | req-id-xyz
+[SUCCESS #1] 2026/3/22 10:30:00 | 127.0.0.1 | gpt-3.5-turbo | Tokens:150+200 | Cost:$0.0004 | Req:1.2KB | Resp:2.5KB | 10:30:02 | 200 | 1.23s | req-id-xyz
 ```
+
+## 💰 Reconciliation / 对账审计
+
+For a detailed guide on how to audit your costs and reconcile usage with provider bills, see:
+有关如何审计费用并与厂商账单进行对账的详细指引，请参阅：
+
+- [English Guide](./RECONCILIATION_GUIDE.md)
+- [中文指引](./RECONCILIATION_GUIDE_zh.md)
 
 ## 🚨 Disclaimer / 免责声明
 

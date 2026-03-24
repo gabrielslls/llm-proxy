@@ -21,10 +21,11 @@ Required:
   --target <url>    目标 API 地址
 
 Options:
-  --port <number>   监听端口 (默认: 8000)
-  --log-dir <path>  日志文件目录 (默认: ./logs)
-  --help            显示帮助信息
-  --version         输出版本号
+  --port <number>      监听端口 (默认: 8000)
+  --log-dir <path>     日志文件目录 (默认: ./logs)
+  --log-payloads       记录完整 API 请求和响应报文 (JSONL 格式)
+  --help               显示帮助信息
+  --version            输出版本号
 `);
 }
 
@@ -33,6 +34,7 @@ function parseArgs(): ProxyConfig {
   let target: string | undefined;
   let port = 8000;
   let logDir = "./logs";
+  let logPayloads = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -45,6 +47,9 @@ function parseArgs(): ProxyConfig {
         break;
       case "--log-dir":
         logDir = args[++i];
+        break;
+      case "--log-payloads":
+        logPayloads = true;
         break;
       case "--help":
         printHelp();
@@ -71,6 +76,7 @@ function parseArgs(): ProxyConfig {
     port,
     target: target.endsWith("/") ? target.slice(0, -1) : target,
     logDir: resolvedLogDir,
+    logPayloads,
   };
 }
 

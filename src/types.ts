@@ -2,6 +2,7 @@ export interface ProxyConfig {
   port: number;
   target: string;
   logDir: string;
+  logPayloads: boolean;
 }
 
 export interface LLMRequest {
@@ -66,6 +67,7 @@ export interface CallRecord {
     providerTraceId?: string;
     providerRequestId?: string;
     providerHeaders?: Record<string, string>;
+    cost?: number;
   };
   error?: {
     message: string;

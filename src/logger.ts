@@ -13,10 +13,12 @@ export class CallLogger {
   private requestLogPath: string;
   private writeQueue: Array<{ record: CallRecord; resolve: () => void; reject: (error: Error) => void }> = [];
   private isWriting: boolean = false;
+  private logPayloads: boolean;
 
-  constructor(logDir: string) {
+  constructor(logDir: string, logPayloads: boolean = false) {
     this.logFilePath = join(logDir, 'calls.jsonl');
     this.requestLogPath = join(logDir, 'requests.log');
+    this.logPayloads = logPayloads;
     this.ensureLogDirectory().catch(err => 
       console.error('[LOG ERROR] Failed to initialize log directory:', err)
     );
@@ -59,11 +61,12 @@ export class CallLogger {
       while (this.writeQueue.length > 0) {
         const { record, resolve, reject } = this.writeQueue.shift()!;
         try {
-          await this.checkAndRotateLog();
-          
-          // 写入完整日志
-          const line = JSON.stringify(record) + "\n";
-          await appendFile(this.logFilePath, line, "utf-8");
+          if (this.logPayloads) {
+            await this.checkAndRotateLog();
+            // 写入完整日志
+            const line = JSON.stringify(record) + "\n";
+            await appendFile(this.logFilePath, line, "utf-8");
+          }
           
           // 写入请求级日志
           await this.writeRequestLog(record);
@@ -110,7 +113,11 @@ export class CallLogger {
     }
 
     const durationSec = (duration / 1000).toFixed(2);
-    const logLine = `${numberLabel} ${date} ${time} | ${clientIp} | ${model} | Req:${(reqSize/1024).toFixed(1)}KB | Resp:${(respSize/1024).toFixed(1)}KB | ${respTime} | ${status} | ${durationSec}s | ${providerReqId}
+    const usage = record.response?.usage;
+    const tokens = usage ? `${usage.promptTokens}+${usage.completionTokens}` : '-';
+    const cost = record.response?.cost !== undefined ? `$${record.response.cost.toFixed(4)}` : '-';
+
+    const logLine = `${numberLabel} ${date} ${time} | ${clientIp} | ${model} | Tokens:${tokens} | Cost:${cost} | Req:${(reqSize/1024).toFixed(1)}KB | Resp:${(respSize/1024).toFixed(1)}KB | ${respTime} | ${status} | ${durationSec}s | ${providerReqId}
 `;
 
     await appendFile(this.requestLogPath, logLine, "utf-8");
