@@ -75,3 +75,13 @@ export interface CallRecord {
   };
   durationMs?: number;
 }
+
+export interface Statistics {
+  successCount: number;
+  failureCount: number;
+  totalTokens: number;
+  totalCost: number;
+  averageResponseTime: number | string;
+  totalRequests: number;
+  startTime: string;
+}
