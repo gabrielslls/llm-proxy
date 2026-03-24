@@ -1,18 +1,21 @@
 import express, { Request, Response as ExpressResponse, NextFunction } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { CallLogger } from "./logger";
+import { StatisticsTracker } from "./statistics";
 import { ProxyConfig, CallRecord } from "./types";
 
 export class LLMProxy {
   private config: ProxyConfig;
   private logger: CallLogger;
+  private statisticsTracker: StatisticsTracker;
   private app: express.Application;
   private successCount: number = 0;
   private errorCount: number = 0;
 
-  constructor(config: ProxyConfig) {
+  constructor(config: ProxyConfig, statisticsTracker: StatisticsTracker) {
     this.config = config;
     this.logger = new CallLogger(config.logDir, config.logPayloads);
+    this.statisticsTracker = statisticsTracker;
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
@@ -141,6 +144,11 @@ export class LLMProxy {
           this.logger.logError(record, new Error(`HTTP ${fetchResponse.status}: ${errorBody}`)).catch(err => 
             console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
           );
+          try {
+            this.statisticsTracker.addRecord(record);
+          } catch (err) {
+            console.error(`[STATS ERROR] Failed to update statistics for ${traceId}:`, err);
+          }
           res.status(fetchResponse.status).send(errorBody);
           return;
         }
@@ -164,6 +172,11 @@ export class LLMProxy {
           this.logger.logError(record, error as Error).catch(err => 
         console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
       );
+          try {
+            this.statisticsTracker.addRecord(record);
+          } catch (err) {
+            console.error(`[STATS ERROR] Failed to update statistics for ${traceId}:`, err);
+          }
           res.status(500).json({ error: (error as Error).message });
         }
     });
@@ -259,6 +272,11 @@ export class LLMProxy {
     this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
     );
+    try {
+      this.statisticsTracker.addRecord(record);
+    } catch (err) {
+      console.error(`[STATS ERROR] Failed to update statistics for ${record.traceId}:`, err);
+    }
 
     for (const [key, value] of fetchResponse.headers.entries()) {
       if (
@@ -375,6 +393,11 @@ export class LLMProxy {
       this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
     );
+      try {
+        this.statisticsTracker.addRecord(record);
+      } catch (err) {
+        console.error(`[STATS ERROR] Failed to update statistics for ${record.traceId}:`, err);
+      }
 
       res.end();
       } catch (error) {

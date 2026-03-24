@@ -1,5 +1,7 @@
 import { LLMProxy } from "./proxy";
 import { ProxyConfig } from "./types";
+import { StatisticsTracker } from "./statistics";
+import { ConsoleStats } from "./console";
 import { resolve } from "path";
 
 // 全局异常处理
@@ -81,5 +83,7 @@ function parseArgs(): ProxyConfig {
 }
 
 const config = parseArgs();
-const proxy = new LLMProxy(config);
+const statisticsTracker = new StatisticsTracker();
+const proxy = new LLMProxy(config, statisticsTracker);
+new ConsoleStats(statisticsTracker);
 proxy.start();
