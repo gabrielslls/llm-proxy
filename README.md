@@ -19,7 +19,7 @@ A lightweight, neutral, open-source LLM proxy tool designed for transparent toke
 - 🛡️ **Privacy Focused**: No data sent to 3rd parties; pure observation only. (隐私保护：无第三方数据传输，仅做纯观测用途)
 - 🚫 **Vendor Neutral**: No hardcoded endpoints or bypasses. (厂商中立：不包含硬编码的接口，无绕过或破解行为)
 - 🤝 **AI Software Ready**: Optimized for OpenClaw, OpenCode, and other AI agents. (协作友好：适配 OpenClaw、OpenCode 等主流 AI 软件)
-- ⌨️ **Interactive Console**: Press Enter to view global statistics, press again to exit.
+- ⌨️ **Interactive Console**: Press Enter to view global statistics, press Enter again within 2 seconds to exit.
 
 ## 🤝 Compatibility / 软件适配
 
@@ -58,7 +58,7 @@ npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-paylo
 ### Console Statistics
 When running in an interactive terminal:
 - Press **Enter** to display global statistics (success/failure counts, total tokens, total cost, average response time)
-- Press **Enter** again to exit the program gracefully
+- Press **Enter** again within 2 seconds to exit the program gracefully
 
 Note: The statistics feature is automatically disabled in non-TTY environments (Docker, systemd, CI/CD, etc.) without affecting normal proxy operation.
 

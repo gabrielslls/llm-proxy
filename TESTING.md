@@ -6,6 +6,7 @@ This document describes manual test steps for validating the LLM proxy statistic
 - Statistics include: success/failure counts, total tokens, total cost, average response time
 - Auto-disable in non-TTY environments
 - 100ms debounce on Enter key presses
+- Double-Enter within 2 seconds to exit the program
 - Statistics stored in memory only (cleared on restart)
 
 ## Test Prerequisites
@@ -89,6 +90,7 @@ This document describes manual test steps for validating the LLM proxy statistic
 **Expected Results:**
 - Only 1 statistics panel appears (or 2 if presses are spaced >100ms apart)
 - Multiple rapid presses are ignored (debounced)
+- To exit the program, press Enter to show statistics, then press Enter again within 2 seconds
 
 ---
 
