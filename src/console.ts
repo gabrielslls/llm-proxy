@@ -6,7 +6,7 @@ export class ConsoleStats {
   private enabled: boolean = true;
   private lastEnterTime: number = 0;
   private originalIsRaw: boolean | undefined;
-  private firstEnterPress: boolean = true;
+  private lastStatsDisplayTime: number = 0;
 
   constructor(statisticsTracker: StatisticsTracker) {
     this.statisticsTracker = statisticsTracker;
@@ -54,11 +54,7 @@ export class ConsoleStats {
     }
     this.lastEnterTime = now;
 
-    if (this.firstEnterPress) {
-      const stats = this.statisticsTracker.getStats();
-      this.displayStats(stats);
-      this.firstEnterPress = false;
-    } else {
+    if (now - this.lastStatsDisplayTime < 2000) {
       const cleanup = () => {
         if (this.enabled && process.stdin.isTTY) {
           process.stdin.setRawMode(this.originalIsRaw ?? false);
@@ -66,6 +62,10 @@ export class ConsoleStats {
       };
       cleanup();
       process.exit(0);
+    } else {
+      const stats = this.statisticsTracker.getStats();
+      this.displayStats(stats);
+      this.lastStatsDisplayTime = now;
     }
   }
 
