@@ -270,6 +270,10 @@ export class LLMProxy {
       })
     };
 
+    if (providerRequestId) {
+      console.log(`[PROXY] providerRequestId=${providerRequestId} for traceId=${record.traceId}`);
+    }
+
     this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
     );
@@ -391,6 +395,11 @@ export class LLMProxy {
           totalTokens: usage.total_tokens
         } : undefined)
       };
+
+      if (providerRequestId) {
+        console.log(`[PROXY] providerRequestId=${providerRequestId} for traceId=${record.traceId}`);
+      }
+
       this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
     );
