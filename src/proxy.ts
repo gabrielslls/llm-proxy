@@ -418,6 +418,8 @@ export class LLMProxy {
 
     this.app.listen(this.config.port, () => {
       console.log(`[PROXY] Listening on http://localhost:${this.config.port}`);
+      console.log("ℹ️  按回车键查看全局统计信息，再次按回车键退出程序");
+      console.log("⚠️  提示：token数量未经测试，仅供参考");
     });
   }
 }
