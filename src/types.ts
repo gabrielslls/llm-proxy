@@ -84,4 +84,7 @@ export interface Statistics {
   averageResponseTime: number | string;
   totalRequests: number;
   startTime: string;
+  codingplanLimit?: number;
+  remaining?: number;
+  usagePercent?: number;
 }

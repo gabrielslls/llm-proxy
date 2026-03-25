@@ -19,6 +19,9 @@ pm2-out.log
 *.swp
 *.swo
 
+# Sisyphus
+.sisyphus/
+
 # OS
 .DS_Store
 Thumbs.db

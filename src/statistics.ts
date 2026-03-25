@@ -8,9 +8,13 @@ export class StatisticsTracker {
   private totalResponseTime: number = 0;
   private totalRequests: number = 0;
   private startTime: string;
+  private codingplanLimit?: number;
 
-  constructor() {
+  constructor(codingplanLimit?: number) {
     this.startTime = new Date().toISOString();
+    if (codingplanLimit && codingplanLimit > 0) {
+      this.codingplanLimit = codingplanLimit;
+    }
   }
 
   addRecord(record: CallRecord): void {
@@ -36,7 +40,7 @@ export class StatisticsTracker {
       ? this.totalResponseTime / this.totalRequests 
       : 'N/A';
 
-    return {
+    const stats: Statistics = {
       successCount: this.successCount,
       failureCount: this.failureCount,
       totalTokens: this.totalTokens,
@@ -45,5 +49,13 @@ export class StatisticsTracker {
       totalRequests: this.totalRequests,
       startTime: this.startTime
     };
+
+    if (this.codingplanLimit) {
+      stats.codingplanLimit = this.codingplanLimit;
+      stats.remaining = Math.max(this.codingplanLimit - this.totalRequests, 0);
+      stats.usagePercent = (this.totalRequests / this.codingplanLimit) * 100;
+    }
+
+    return stats;
   }
 }

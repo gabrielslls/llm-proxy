@@ -97,7 +97,18 @@ export class ConsoleStats {
     };
 
     const headerContent = `Global Statistics (since ${formatStartTime(stats.startTime)})`;
-    const tableWidth = Math.max(headerContent.length, 45) + 2;
+    let tableWidth = Math.max(headerContent.length, 45) + 2;
+
+    if (stats.codingplanLimit) {
+      const codingplanLines = [
+        `CodingPlan limit:     ${formatNumber(stats.codingplanLimit).padStart(10)}`,
+        `Used:                 ${formatNumber(stats.totalRequests).padStart(10)}`,
+        `Remaining:            ${formatNumber(stats.remaining || 0).padStart(10)}`,
+        `Usage:                ${(stats.usagePercent || 0).toFixed(1)}%`
+      ];
+      const maxCodingplanLineLength = Math.max(...codingplanLines.map(l => l.length));
+      tableWidth = Math.max(tableWidth, maxCodingplanLineLength + 2);
+    }
 
     const createHorizontalLine = (leftChar: string, fillChar: string, rightChar: string): string => {
       return leftChar + fillChar.repeat(tableWidth - 2) + rightChar;
@@ -117,9 +128,21 @@ export class ConsoleStats {
     lines.push(createContentLine(`Total tokens consumed:${formatNumber(stats.totalTokens).padStart(10)}`));
     lines.push(createContentLine(`Total cost:           ${formatCost(stats.totalCost).padStart(10)}`));
     lines.push(createContentLine(`Average response time:${formatResponseTime(stats.averageResponseTime).padStart(10)}`));
+    
+    if (stats.codingplanLimit) {
+      lines.push(createHorizontalLine('├', '─', '┤'));
+      lines.push(createContentLine(`CodingPlan limit:     ${formatNumber(stats.codingplanLimit).padStart(10)}`));
+      lines.push(createContentLine(`Used:                 ${formatNumber(stats.totalRequests).padStart(10)}`));
+      lines.push(createContentLine(`Remaining:            ${formatNumber(stats.remaining || 0).padStart(10)}`));
+      lines.push(createContentLine(`Usage:                ${(stats.usagePercent || 0).toFixed(1)}%`));
+    }
+    
     lines.push(createHorizontalLine('└', '─', '┘'));
 
     console.log('\n' + lines.join('\n') + '\n');
+    if (stats.codingplanLimit && stats.usagePercent && stats.usagePercent >= 100) {
+      console.log('⚠️  Warning: CodingPlan limit reached or exceeded!\n');
+    }
     console.log('⚠️  提示：token数量未经测试，仅供参考\n');
   }
 }
