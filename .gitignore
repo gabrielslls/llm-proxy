@@ -22,6 +22,9 @@ pm2-out.log
 # Sisyphus
 .sisyphus/
 
+# Local notes
+AGENTS.md
+
 # OS
 .DS_Store
 Thumbs.db
