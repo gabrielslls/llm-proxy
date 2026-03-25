@@ -97,17 +97,41 @@ export class ConsoleStats {
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
+    // Calculate visual width: English chars = 1, Chinese chars = 2
+    const getVisualWidth = (str: string): number => {
+      let width = 0;
+      for (const char of str) {
+        width += (char.charCodeAt(0) > 127) ? 2 : 1;
+      }
+      return width;
+    };
+
+    // Custom padEnd for visual alignment
+    const visualPadEnd = (str: string, targetWidth: number): string => {
+      const currentWidth = getVisualWidth(str);
+      const padLength = targetWidth - currentWidth;
+      return padLength > 0 ? str + ' '.repeat(padLength) : str;
+    };
+
+    // Right-align numbers accounting for visual width of label
+    const alignRight = (label: string, value: string, totalWidth: number): string => {
+      const labelWidth = getVisualWidth(label);
+      const valueWidth = getVisualWidth(value);
+      const spaceBetween = totalWidth - labelWidth - valueWidth;
+      return label + ' '.repeat(Math.max(1, spaceBetween)) + value;
+    };
+
     const headerContent = t.globalStats.replace('{time}', formatStartTime(stats.startTime));
-    let tableWidth = Math.max(headerContent.length, 45) + 2;
+    let tableWidth = Math.max(getVisualWidth(headerContent), 45) + 2;
 
     if (stats.codingplanLimit) {
       const codingplanLines = [
-        `${t.codingPlanLimit}:     ${formatNumber(stats.codingplanLimit).padStart(10)}`,
-        `${t.used}:                 ${formatNumber(stats.totalRequests).padStart(10)}`,
-        `${t.remaining}:            ${formatNumber(stats.remaining || 0).padStart(10)}`,
-        `${t.usage}:                ${(stats.usagePercent || 0).toFixed(1)}%`
+        alignRight(t.codingPlanLimit + ':', formatNumber(stats.codingplanLimit), 45),
+        alignRight(t.used + ':', formatNumber(stats.totalRequests), 45),
+        alignRight(t.remaining + ':', formatNumber(stats.remaining || 0), 45),
+        alignRight(t.usage + ':', `${(stats.usagePercent || 0).toFixed(1)}%`, 45)
       ];
-      const maxCodingplanLineLength = Math.max(...codingplanLines.map(l => l.length));
+      const maxCodingplanLineLength = Math.max(...codingplanLines.map(l => getVisualWidth(l)));
       tableWidth = Math.max(tableWidth, maxCodingplanLineLength + 2);
     }
 
@@ -116,26 +140,27 @@ export class ConsoleStats {
     };
 
     const createContentLine = (content: string): string => {
-      const paddedContent = content.padEnd(tableWidth - 2);
+      const paddedContent = visualPadEnd(content, tableWidth - 2);
       return `│${paddedContent}│`;
     };
 
     const lines: string[] = [];
+    const contentWidth = tableWidth - 2;
     lines.push(createHorizontalLine('┌', '─', '┐'));
     lines.push(createContentLine(headerContent));
     lines.push(createHorizontalLine('├', '─', '┤'));
-    lines.push(createContentLine(`${t.successRequests}:     ${formatNumber(stats.successCount).padStart(10)}`));
-    lines.push(createContentLine(`${t.failedRequests}:      ${formatNumber(stats.failureCount).padStart(10)}`));
-    lines.push(createContentLine(`${t.totalTokens}:${formatNumber(stats.totalTokens).padStart(10)}`));
-    lines.push(createContentLine(`${t.totalCost}:           ${formatCost(stats.totalCost).padStart(10)}`));
-    lines.push(createContentLine(`${t.avgResponseTime}:${formatResponseTime(stats.averageResponseTime).padStart(10)}`));
+    lines.push(createContentLine(alignRight(t.successRequests, formatNumber(stats.successCount), contentWidth)));
+    lines.push(createContentLine(alignRight(t.failedRequests, formatNumber(stats.failureCount), contentWidth)));
+    lines.push(createContentLine(alignRight(t.totalTokens, formatNumber(stats.totalTokens), contentWidth)));
+    lines.push(createContentLine(alignRight(t.totalCost, formatCost(stats.totalCost), contentWidth)));
+    lines.push(createContentLine(alignRight(t.avgResponseTime, formatResponseTime(stats.averageResponseTime), contentWidth)));
     
     if (stats.codingplanLimit) {
       lines.push(createHorizontalLine('├', '─', '┤'));
-      lines.push(createContentLine(`${t.codingPlanLimit}:     ${formatNumber(stats.codingplanLimit).padStart(10)}`));
-      lines.push(createContentLine(`${t.used}:                 ${formatNumber(stats.totalRequests).padStart(10)}`));
-      lines.push(createContentLine(`${t.remaining}:            ${formatNumber(stats.remaining || 0).padStart(10)}`));
-      lines.push(createContentLine(`${t.usage}:                ${(stats.usagePercent || 0).toFixed(1)}%`));
+      lines.push(createContentLine(alignRight(t.codingPlanLimit, formatNumber(stats.codingplanLimit), contentWidth)));
+      lines.push(createContentLine(alignRight(t.used, formatNumber(stats.totalRequests), contentWidth)));
+      lines.push(createContentLine(alignRight(t.remaining, formatNumber(stats.remaining || 0), contentWidth)));
+      lines.push(createContentLine(alignRight(t.usage, `${(stats.usagePercent || 0).toFixed(1)}%`, contentWidth)));
     }
     
     lines.push(createHorizontalLine('└', '─', '┘'));
