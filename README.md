@@ -56,9 +56,44 @@ npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-paylo
 ```
 
 ### Console Statistics
-When running in an interactive terminal:
-- Press **Enter** to display global statistics (success/failure counts, total tokens, total cost, average response time)
-- Press **Enter** again within 2 seconds to exit the program gracefully
+When running in an interactive terminal, press **Enter** to view real-time global statistics:
+
+```
+┌─────────────────────────────────────────┐
+│Global Statistics (since 2026-03-26 ...) │
+├─────────────────────────────────────────┤
+│Success requests:      342               │
+│Failed requests:        0                │
+│Total tokens consumed: 12,345            │
+│Total cost:         $0.0123              │
+│Average response time: 234ms             │
+└─────────────────────────────────────────┘
+
+⚠️  Note: Token counts are for reference only
+```
+
+**Interactive Controls:**
+- Press **Enter** → Display global statistics (success/failure counts, total tokens, total cost, average response time)
+- Press **Enter** again within 2 seconds → Exit the program gracefully
+- Wait >2 seconds → Next Enter shows updated statistics
+
+**With CodingPlan Limit:**
+```
+┌─────────────────────────────────────────┐
+│Global Statistics (since 2026-03-26 ...) │
+├─────────────────────────────────────────┤
+│Success requests:      342               │
+│Failed requests:        0                │
+│Total tokens consumed: 12,345            │
+│Total cost:         $0.0123              │
+│Average response time: 234ms             │
+├─────────────────────────────────────────┤
+│CodingPlan limit:     1,200              │
+│Used:                  342               │
+│Remaining:             858               │
+│Usage:                28.5%              │
+└─────────────────────────────────────────┘
+```
 
 Note: The statistics feature is automatically disabled in non-TTY environments (Docker, systemd, CI/CD, etc.) without affecting normal proxy operation.
 
