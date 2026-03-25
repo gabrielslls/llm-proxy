@@ -48,7 +48,7 @@ npm install
 npm start -- --target https://api.openai.com/v1
 
 # 启动代理至其他厂商
-npm start -- --target <API地址> --port 8000 --log-payloads
+npm start -- --target <API地址> --port 8000 --log-payloads --codingplan-limit <num>
 ```
 
 ### 控制台统计功能

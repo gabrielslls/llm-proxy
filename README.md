@@ -52,7 +52,7 @@ npm install
 npm start -- --target https://api.openai.com/v1
 
 # Full options / 完整参数
-npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-payloads
+npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-payloads --codingplan-limit <num>
 ```
 
 ### Console Statistics
