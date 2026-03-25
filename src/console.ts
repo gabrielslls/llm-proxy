@@ -73,16 +73,39 @@ export class ConsoleStats {
       return `${Math.round(time as number)}ms`;
     };
 
+    const formatStartTime = (isoString: string): string => {
+      const date = new Date(isoString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
+    const headerContent = `Global Statistics (since ${formatStartTime(stats.startTime)})`;
+    const tableWidth = Math.max(headerContent.length, 45) + 2;
+
+    const createHorizontalLine = (leftChar: string, fillChar: string, rightChar: string): string => {
+      return leftChar + fillChar.repeat(tableWidth - 2) + rightChar;
+    };
+
+    const createContentLine = (content: string): string => {
+      const paddedContent = content.padEnd(tableWidth - 2);
+      return `│${paddedContent}│`;
+    };
+
     const lines: string[] = [];
-    lines.push('┌─────────────────────────────────────────┐');
-    lines.push(`│ Global Statistics (since ${stats.startTime}) │`);
-    lines.push('├─────────────────────────────────────────┤');
-    lines.push(`│ Success requests:     ${formatNumber(stats.successCount).padStart(10)} │`);
-    lines.push(`│ Failed requests:      ${formatNumber(stats.failureCount).padStart(10)} │`);
-    lines.push(`│ Total tokens consumed:${formatNumber(stats.totalTokens).padStart(10)} │`);
-    lines.push(`│ Total cost:           ${formatCost(stats.totalCost).padStart(10)} │`);
-    lines.push(`│ Average response time:${formatResponseTime(stats.averageResponseTime).padStart(10)} │`);
-    lines.push('└─────────────────────────────────────────┘');
+    lines.push(createHorizontalLine('┌', '─', '┐'));
+    lines.push(createContentLine(headerContent));
+    lines.push(createHorizontalLine('├', '─', '┤'));
+    lines.push(createContentLine(`Success requests:     ${formatNumber(stats.successCount).padStart(10)}`));
+    lines.push(createContentLine(`Failed requests:      ${formatNumber(stats.failureCount).padStart(10)}`));
+    lines.push(createContentLine(`Total tokens consumed:${formatNumber(stats.totalTokens).padStart(10)}`));
+    lines.push(createContentLine(`Total cost:           ${formatCost(stats.totalCost).padStart(10)}`));
+    lines.push(createContentLine(`Average response time:${formatResponseTime(stats.averageResponseTime).padStart(10)}`));
+    lines.push(createHorizontalLine('└', '─', '┘'));
 
     console.log('\n' + lines.join('\n') + '\n');
   }
