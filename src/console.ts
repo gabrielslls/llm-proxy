@@ -6,6 +6,7 @@ export class ConsoleStats {
   private enabled: boolean = true;
   private lastEnterTime: number = 0;
   private originalIsRaw: boolean | undefined;
+  private firstEnterPress: boolean = true;
 
   constructor(statisticsTracker: StatisticsTracker) {
     this.statisticsTracker = statisticsTracker;
@@ -53,8 +54,19 @@ export class ConsoleStats {
     }
     this.lastEnterTime = now;
 
-    const stats = this.statisticsTracker.getStats();
-    this.displayStats(stats);
+    if (this.firstEnterPress) {
+      const stats = this.statisticsTracker.getStats();
+      this.displayStats(stats);
+      this.firstEnterPress = false;
+    } else {
+      const cleanup = () => {
+        if (this.enabled && process.stdin.isTTY) {
+          process.stdin.setRawMode(this.originalIsRaw ?? false);
+        }
+      };
+      cleanup();
+      process.exit(0);
+    }
   }
 
   private displayStats(stats: Statistics): void {
@@ -108,5 +120,6 @@ export class ConsoleStats {
     lines.push(createHorizontalLine('└', '─', '┘'));
 
     console.log('\n' + lines.join('\n') + '\n');
+    console.log('⚠️  提示：token数量未经测试，仅供参考\n');
   }
 }
