@@ -1,5 +1,6 @@
 import { StatisticsTracker } from './statistics';
 import type { Statistics } from './types';
+import { t } from './i18n';
 
 export class ConsoleStats {
   private statisticsTracker: StatisticsTracker;
@@ -96,15 +97,15 @@ export class ConsoleStats {
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-    const headerContent = `Global Statistics (since ${formatStartTime(stats.startTime)})`;
+    const headerContent = t.globalStats.replace('{time}', formatStartTime(stats.startTime));
     let tableWidth = Math.max(headerContent.length, 45) + 2;
 
     if (stats.codingplanLimit) {
       const codingplanLines = [
-        `CodingPlan limit:     ${formatNumber(stats.codingplanLimit).padStart(10)}`,
-        `Used:                 ${formatNumber(stats.totalRequests).padStart(10)}`,
-        `Remaining:            ${formatNumber(stats.remaining || 0).padStart(10)}`,
-        `Usage:                ${(stats.usagePercent || 0).toFixed(1)}%`
+        `${t.codingPlanLimit}:     ${formatNumber(stats.codingplanLimit).padStart(10)}`,
+        `${t.used}:                 ${formatNumber(stats.totalRequests).padStart(10)}`,
+        `${t.remaining}:            ${formatNumber(stats.remaining || 0).padStart(10)}`,
+        `${t.usage}:                ${(stats.usagePercent || 0).toFixed(1)}%`
       ];
       const maxCodingplanLineLength = Math.max(...codingplanLines.map(l => l.length));
       tableWidth = Math.max(tableWidth, maxCodingplanLineLength + 2);
@@ -123,26 +124,26 @@ export class ConsoleStats {
     lines.push(createHorizontalLine('┌', '─', '┐'));
     lines.push(createContentLine(headerContent));
     lines.push(createHorizontalLine('├', '─', '┤'));
-    lines.push(createContentLine(`Success requests:     ${formatNumber(stats.successCount).padStart(10)}`));
-    lines.push(createContentLine(`Failed requests:      ${formatNumber(stats.failureCount).padStart(10)}`));
-    lines.push(createContentLine(`Total tokens consumed:${formatNumber(stats.totalTokens).padStart(10)}`));
-    lines.push(createContentLine(`Total cost:           ${formatCost(stats.totalCost).padStart(10)}`));
-    lines.push(createContentLine(`Average response time:${formatResponseTime(stats.averageResponseTime).padStart(10)}`));
+    lines.push(createContentLine(`${t.successRequests}:     ${formatNumber(stats.successCount).padStart(10)}`));
+    lines.push(createContentLine(`${t.failedRequests}:      ${formatNumber(stats.failureCount).padStart(10)}`));
+    lines.push(createContentLine(`${t.totalTokens}:${formatNumber(stats.totalTokens).padStart(10)}`));
+    lines.push(createContentLine(`${t.totalCost}:           ${formatCost(stats.totalCost).padStart(10)}`));
+    lines.push(createContentLine(`${t.avgResponseTime}:${formatResponseTime(stats.averageResponseTime).padStart(10)}`));
     
     if (stats.codingplanLimit) {
       lines.push(createHorizontalLine('├', '─', '┤'));
-      lines.push(createContentLine(`CodingPlan limit:     ${formatNumber(stats.codingplanLimit).padStart(10)}`));
-      lines.push(createContentLine(`Used:                 ${formatNumber(stats.totalRequests).padStart(10)}`));
-      lines.push(createContentLine(`Remaining:            ${formatNumber(stats.remaining || 0).padStart(10)}`));
-      lines.push(createContentLine(`Usage:                ${(stats.usagePercent || 0).toFixed(1)}%`));
+      lines.push(createContentLine(`${t.codingPlanLimit}:     ${formatNumber(stats.codingplanLimit).padStart(10)}`));
+      lines.push(createContentLine(`${t.used}:                 ${formatNumber(stats.totalRequests).padStart(10)}`));
+      lines.push(createContentLine(`${t.remaining}:            ${formatNumber(stats.remaining || 0).padStart(10)}`));
+      lines.push(createContentLine(`${t.usage}:                ${(stats.usagePercent || 0).toFixed(1)}%`));
     }
     
     lines.push(createHorizontalLine('└', '─', '┘'));
 
     console.log('\n' + lines.join('\n') + '\n');
     if (stats.codingplanLimit && stats.usagePercent && stats.usagePercent >= 100) {
-      console.log('⚠️  Warning: CodingPlan limit reached or exceeded!\n');
+      console.log(t.warningLimit + '\n');
     }
-    console.log('⚠️  提示：token数量未经测试，仅供参考\n');
+    console.log(t.tokenNotice + '\n');
   }
 }
