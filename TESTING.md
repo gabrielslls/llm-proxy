@@ -3,7 +3,7 @@
 ## Overview
 This document describes manual test steps for validating the LLM proxy statistics feature, which provides:
 - Global statistics display when pressing Enter in the console
-- Statistics include: success/failure counts, total tokens, total cost, average response time
+- Statistics include: success/failure counts, total tokens, average response time
 - Auto-disable in non-TTY environments
 - 100ms debounce on Enter key presses
 - Double-Enter within 2 seconds to exit the program
@@ -37,9 +37,8 @@ This document describes manual test steps for validating the LLM proxy statistic
 **Expected Results:**
 - Statistics panel appears with:
   - Success requests count matches number of successful requests
-  - Failed requests count is 0 (if all requests succeeded)
-  - Total tokens shows sum of tokens from all requests
-  - Total cost shows sum of estimated costs
+  - Failed requests count excludes rate limit (429) responses
+  - Total tokens shows sum of tokens from all successful requests
   - Average response time shows average of all request durations
 
 ---
@@ -54,9 +53,8 @@ This document describes manual test steps for validating the LLM proxy statistic
 **Expected Results:**
 - Statistics panel shows:
   - Success requests: 0
-  - Failed requests: 0
+  - Failed requests: 0 (excluding rate limit 429 responses)
   - Total tokens consumed: 0
-  - Total cost: $0.0000
   - Average response time: N/A
 
 ---
@@ -121,7 +119,7 @@ This document describes manual test steps for validating the LLM proxy statistic
 
 2. **Logging:**
    - Verify logs are written to `./logs/requests.log`
-   - Verify log entries contain token counts and cost information
+   - Verify log entries contain token counts
 
 3. **Streaming:**
    - Test a streaming request using `stream: true` in the request payload
@@ -141,7 +139,8 @@ This document describes manual test steps for validating the LLM proxy statistic
 
 ### Issue: Statistics counts are incorrect
 - Check that all requests are being properly recorded
-- Verify successful vs failed requests are being correctly categorized
+- Verify successful vs failed vs rate-limited (429) requests are being correctly categorized
+- Note: 429 rate limit responses are tracked separately and do not count as failures
 - Check that `CallRecord` objects are being properly passed to `StatisticsTracker.addRecord()`
 
 ### Issue: Debounce not working

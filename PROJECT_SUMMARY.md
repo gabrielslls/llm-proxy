@@ -281,6 +281,19 @@ wc -l logs/calls.jsonl
 日期 时间 | IP地址 | 模型 | Req:XX.XKB | Resp:XX.XKB | 响应时间 | 状态码 | 耗时 | 请求ID
 ```
 
+**控制台实时输出格式：**
+
+```
+[trace-id] [PROXY] ip=x.x.x.x METHOD /path                    # 请求开始
+[SUCCESS #N] traceId=xxx status=200 METHOD /path - XXms      # 成功响应
+[RETRY #N] traceId=xxx status=429 METHOD /path - XXms        # 限流响应 (429)
+[ERROR #N] traceId=xxx status=5xx METHOD /path - XXms        # 错误响应
+```
+
+- `SUCCESS`: HTTP 2xx 成功响应
+- `RETRY`: HTTP 429 限流响应（客户端应重试）
+- `ERROR`: HTTP 4xx/5xx 其他错误响应
+
  字段说明：
 - `日期 时间`: 请求开始时间
 - `IP地址`: 客户端 IP 地址（优先从 X-Forwarded-For 获取，其次 X-Real-IP，最后 req.ip）
@@ -293,6 +306,9 @@ wc -l logs/calls.jsonl
 - `请求ID`: 厂商返回的请求 ID
 
 **更新日志**:
+- 2026-03-26:
+  - 429 限流响应在控制台输出为 `[RETRY #N]`，替代 `[ERROR #N]`
+  - CodingPlan 限额现在只统计成功请求，不计入失败请求
 - 2026-03-21:
   - 新增客户端 IP 地址列
   - 去掉 Token 数列（信息在厂商返回的请求 ID 中可查）

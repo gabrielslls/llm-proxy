@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### 2026-03-26 (限流检测与CodingPlan限额修复)
+
+#### 新增
+- **限流请求单独统计** (`src/proxy.ts`, `src/statistics.ts`):
+  - HTTP 429 (Too Many Requests) 状态码从错误中分离，单独归类为"重试"
+  - 控制台日志输出从 `[ERROR #N]` 改为 `[RETRY #N]`
+  - 新增 `rateLimitCount` 内部统计（不显示在控制台统计表格中）
+  - 限流不计入失败请求统计，更准确反映服务状态
+
+#### 修复
+- **CodingPlan 限额计算修正** (`src/statistics.ts`, `src/console.ts`):
+  - 限额计算现在只统计**成功请求**，不再包含失败请求
+  - "已使用"显示改用 `successCount` 替代 `totalRequests`
+  - 避免因重试机制导致的限额虚高
+
+#### 修复
+- **成功判定逻辑修正** (`src/statistics.ts`):
+  - 移除对 `record.error` 的依赖，只根据 HTTP status (200-299) 判断成功
+  - 解决因日志记录时添加 `error` 字段导致的误判问题
+
+---
+
 ### 2026-03-25 (codingplan 限额参数)
 
 #### 新增

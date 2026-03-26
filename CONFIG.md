@@ -12,7 +12,7 @@ llm-proxy --target <target-url> [options]
 | `--port <number>` | ❌ | `8000` | 代理服务监听端口 |
 | `--log-dir <path>` | ❌ | `./logs` | 日志文件目录 |
 | `--log-payloads` | ❌ | `false` | 记录完整 API 请求和响应报文 (JSONL 格式) |
-| `--codingplan-limit <number>` | ❌ | - | CodingPlan 请求次数限额，统计范围包含成功和失败请求，达到限额后仅显示警告不拦截请求，默认不启用 |
+| `--codingplan-limit <number>` | ❌ | - | CodingPlan 请求次数限额，仅统计成功请求，达到限额后显示警告不拦截请求 |
 | `--help` | ❌ | - | 显示帮助信息 |
 | `--version` | ❌ | - | 输出版本号 |
 
