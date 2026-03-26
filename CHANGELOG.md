@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### 2026-03-26 (Interactive CodingPlan Configuration / 交互式 CodingPlan 配置)
+
+#### 新增 / Added
+- **`--plan` 参数用于交互式 CodingPlan 配置** (`src/index.ts`, `src/plan-config.ts` (new), `src/types.ts`):
+  - `--plan` parameter for interactive CodingPlan configuration
+  - 支持两种计量模式 / Support for two consumption modes:
+    - 按成功请求次数计数 / Requests counting (按成功请求次数)
+    - 按 Token 消耗量计数 / Tokens counting (按 Token 消耗量)
+  - 支持从指定百分比开始计数 / Starting count with percentage support (e.g., 1.6% of limit)
+  - 控制台显示计划类型和格式化的 Token 数字 / Console display shows plan type and formatted token numbers
+
+#### 变更 / Changed
+- **`--codingplan-limit` 参数** (`src/index.ts`):
+  - 现在作为请求模式的快捷方式，起始计数为 0
+  - `--codingplan-limit` is now a shortcut for requests mode with 0 starting count
+
+**涉及文件 / Affected files:**
+- `src/types.ts`
+- `src/plan-config.ts` (new)
+- `src/index.ts`
+- `src/statistics.ts`
+- `src/console.ts`
+- `src/i18n.ts`
+
+---
+
 ### 2026-03-26 (限流检测与CodingPlan限额修复)
 
 #### 新增
