@@ -28,7 +28,7 @@ Simply set the `baseURL` or `OPENAI_BASE_URL` to your proxy address:
 只需将 `baseURL` 或 `OPENAI_BASE_URL` 设置为你的代理地址：
 
 ```text
-http://localhost:8000/v1
+http://localhost:9000/v1
 ```
 
 ## 🚀 Quick Start / 快速开始
@@ -52,7 +52,7 @@ npm install
 npm start -- --target https://api.openai.com/v1
 
 # Full options / 完整参数
-npm start -- --target <target-endpoint> --port 8000 --log-dir ./logs --log-payloads --codingplan-limit <num>
+npm start -- --target <target-endpoint> --port 9000 --log-dir ./logs --log-payloads --plan
 ```
 
 ### Console Statistics
@@ -101,7 +101,7 @@ Set the proxy address in your LLM client:
 在你的 LLM 客户端中设置代理地址：
 
 ```bash
-curl http://localhost:8000/v1/chat/completions \
+curl http://localhost:9000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{

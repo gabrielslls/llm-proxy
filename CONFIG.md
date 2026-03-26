@@ -9,11 +9,10 @@ llm-proxy --target <target-url> [options]
 | Parameter / 参数 | Required / 必需 | Default / 默认值 | Description / 说明 |
 |------------------|-----------------|------------------|--------------------|
 | `--target <url>` | ✅ | 无 | Target API endpoint / 目标 API 地址 |
-| `--port <number>` | ❌ | `8000` | Proxy service port / 代理服务监听端口 |
+| `--port <number>` | ❌ | `9000` | Proxy service port / 代理服务监听端口 |
 | `--log-dir <path>` | ❌ | `./logs` | Log directory / 日志文件目录 |
 | `--log-payloads` | ❌ | `false` | Log full API payloads in JSONL format / 记录完整 API 请求和响应报文 (JSONL 格式) |
 | `--plan` | ❌ | - | Launch interactive CodingPlan configuration / 启动交互式 CodingPlan 配置 |
-| `--codingplan-limit <number>` | ❌ | - | Shortcut for requests mode with starting count 0. See Interactive Plan Configuration below. / 快捷方式，等效于次数记账模式且起始计数为 0。详见下方交互式配置说明 |
 | `--help` | ❌ | - | Show help / 显示帮助信息 |
 | `--version` | ❌ | - | Show version / 输出版本号 |
 
@@ -83,10 +82,6 @@ llm-proxy --target https://api.example.com/v1 --plan
 # 1. Select "Tokens" mode for token-based tracking
 # 2. Enter total limit: 1000000
 # 3. Enter starting count: 50000 (or 5%)
-
-# Legacy shortcut for requests mode (equivalent to --plan with requests mode and 0 starting count)
-# 旧版快捷方式（等效于使用 --plan 选择次数记账模式且起始计数为 0）
-llm-proxy --target https://api.example.com/v1 --codingplan-limit 1200
 ```
 
 ## Environment Variables / 环境变量适配
@@ -96,7 +91,7 @@ For many AI software (e.g., OpenClaw, OpenCode), you can configure the proxy via
 对于许多 AI 软件（如 OpenClaw, OpenCode），可以通过环境变量设置代理：
 
 ```bash
-export OPENAI_BASE_URL=http://localhost:8000/v1
+export OPENAI_BASE_URL=http://localhost:9000/v1
 export OPENAI_API_KEY=your-actual-api-key
 ```
 

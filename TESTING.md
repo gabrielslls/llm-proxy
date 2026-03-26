@@ -23,7 +23,7 @@ This document describes manual test steps for validating the LLM proxy statistic
 1. Start the proxy: `npm start -- --target https://api.openai.com/v1` (or your test endpoint)
 2. Send a few test requests using curl:
    ```bash
-   curl http://localhost:8000/v1/chat/completions \
+   curl http://localhost:9000/v1/chat/completions \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -d '{

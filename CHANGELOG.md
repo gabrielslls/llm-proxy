@@ -13,10 +13,10 @@
   - 支持从指定百分比开始计数 / Starting count with percentage support (e.g., 1.6% of limit)
   - 控制台显示计划类型和格式化的 Token 数字 / Console display shows plan type and formatted token numbers
 
-#### 变更 / Changed
+#### 移除 / Removed
 - **`--codingplan-limit` 参数** (`src/index.ts`):
-  - 现在作为请求模式的快捷方式，起始计数为 0
-  - `--codingplan-limit` is now a shortcut for requests mode with 0 starting count
+  - 已移除该参数，请使用 `--plan` 进行交互式配置
+  - Removed this parameter, please use `--plan` for interactive configuration
 
 **涉及文件 / Affected files:**
 - `src/types.ts`
