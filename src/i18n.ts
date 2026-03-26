@@ -11,7 +11,6 @@ type TranslationKeys = {
   successRequests: string;
   failedRequests: string;
   totalTokens: string;
-  totalCost: string;
   avgResponseTime: string;
   codingPlanLimit: string;
   used: string;
@@ -29,7 +28,6 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     successRequests: 'Success requests',
     failedRequests: 'Failed requests',
     totalTokens: 'Total tokens consumed',
-    totalCost: 'Total cost',
     avgResponseTime: 'Average response time',
     codingPlanLimit: 'CodingPlan limit',
     used: 'Used',
@@ -45,7 +43,6 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     successRequests: '成功请求',
     failedRequests: '失败请求',
     totalTokens: '总 Token 消耗',
-    totalCost: '总费用',
     avgResponseTime: '平均响应时间',
     codingPlanLimit: 'CodingPlan 限额',
     used: '已使用',

@@ -75,10 +75,6 @@ export class ConsoleStats {
       return new Intl.NumberFormat().format(num);
     };
 
-    const formatCost = (cost: number): string => {
-      return `$${cost.toFixed(4)}`;
-    };
-
     const formatResponseTime = (time: number | string): string => {
       if (time === 'N/A') {
         return 'N/A';
@@ -152,13 +148,12 @@ export class ConsoleStats {
     lines.push(createContentLine(alignRight(t.successRequests, formatNumber(stats.successCount), contentWidth)));
     lines.push(createContentLine(alignRight(t.failedRequests, formatNumber(stats.failureCount), contentWidth)));
     lines.push(createContentLine(alignRight(t.totalTokens, formatNumber(stats.totalTokens), contentWidth)));
-    lines.push(createContentLine(alignRight(t.totalCost, formatCost(stats.totalCost), contentWidth)));
     lines.push(createContentLine(alignRight(t.avgResponseTime, formatResponseTime(stats.averageResponseTime), contentWidth)));
     
     if (stats.codingplanLimit) {
       lines.push(createHorizontalLine('├', '─', '┤'));
       lines.push(createContentLine(alignRight(t.codingPlanLimit, formatNumber(stats.codingplanLimit), contentWidth)));
-      lines.push(createContentLine(alignRight(t.used, formatNumber(stats.totalRequests), contentWidth)));
+      lines.push(createContentLine(alignRight(t.used, formatNumber(stats.successCount), contentWidth)));
       lines.push(createContentLine(alignRight(t.remaining, formatNumber(stats.remaining || 0), contentWidth)));
       lines.push(createContentLine(alignRight(t.usage, `${(stats.usagePercent || 0).toFixed(1)}%`, contentWidth)));
     }

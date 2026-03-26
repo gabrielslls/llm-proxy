@@ -12,6 +12,7 @@ export class LLMProxy {
   private app: express.Application;
   private successCount: number = 0;
   private errorCount: number = 0;
+  private retryCount: number = 0;
 
   constructor(config: ProxyConfig, statisticsTracker: StatisticsTracker) {
     this.config = config;
@@ -55,7 +56,7 @@ export class LLMProxy {
       const path = req.path;
       const clientIp = this.getClientIp(req);
 
-       console.log(`[${traceId}] [PROXY] ip=${clientIp} ${req.method} ${path}`);
+        console.log(`[CALL] traceId=${traceId} ip=${clientIp} ${req.method} ${path}`);
 
        let requestBody: unknown = {};
        if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
@@ -134,14 +135,34 @@ export class LLMProxy {
 
         if (!fetchResponse.ok) {
           const errorBody = await fetchResponse.clone().text();
-          const errorNumber = ++this.errorCount;
-          record.errorNumber = errorNumber;
-          record.durationMs = durationMs;
-          record.response = {
-            status: fetchResponse.status,
-            body: { error: errorBody },
-          };
-          console.log(`[ERROR #${errorNumber}] traceId=${traceId} status=${fetchResponse.status} ${req.method} ${path} - ${durationMs}ms`);
+          const isRateLimit = fetchResponse.status === 429;
+          
+          const { providerRequestId } = this.extractProviderIds(fetchResponse);
+          
+          if (isRateLimit) {
+            const retryNumber = ++this.retryCount;
+            record.errorNumber = retryNumber;
+            record.durationMs = durationMs;
+            record.response = {
+              status: fetchResponse.status,
+              body: { error: errorBody },
+              providerRequestId,
+            };
+            const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
+            console.log(`[RESP #${retryNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+          } else {
+            const errorNumber = ++this.errorCount;
+            record.errorNumber = errorNumber;
+            record.durationMs = durationMs;
+            record.response = {
+              status: fetchResponse.status,
+              body: { error: errorBody },
+              providerRequestId,
+            };
+            const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
+            console.log(`[RESP #${errorNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+          }
+          
           this.logger.logError(record, new Error(`HTTP ${fetchResponse.status}: ${errorBody}`)).catch(err => 
             console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
           );
@@ -156,7 +177,6 @@ export class LLMProxy {
 
         const successNumber = ++this.successCount;
         record.successNumber = successNumber;
-        console.log(`[SUCCESS #${successNumber}] traceId=${traceId} ${req.method} ${path} - ${durationMs}ms`);
 
         const contentType = fetchResponse.headers.get("content-type") || "";
         if (contentType.includes("text/event-stream")) {
@@ -169,7 +189,7 @@ export class LLMProxy {
           record.errorNumber = errorNumber;
           record.durationMs = durationMs || (Date.now() - startTime);
           record.responseTimestamp = new Date().toISOString();
-          console.log(`[ERROR #${errorNumber}] traceId=${traceId} EXCEPTION ${req.method} ${path} - ${(error as Error).message}`);
+           console.log(`[RESP #${errorNumber}] traceId=${traceId} status=EXCEPTION ${(error as Error).message}`);
           this.logger.logError(record, error as Error).catch(err => 
         console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
       );
@@ -212,34 +232,6 @@ export class LLMProxy {
     return { providerTraceId, providerRequestId, providerHeaders };
   }
 
-  private calculateCost(model: string, usage?: { promptTokens: number, completionTokens: number, totalTokens: number }): number | undefined {
-    if (!usage) return undefined;
-    
-    // 价格单位：每 1000 Tokens 的美元价格 (USD/1K Tokens)
-    let promptPrice = 0.001;
-    let completionPrice = 0.002;
-
-    const lowerModel = model.toLowerCase();
-    if (lowerModel.includes("gpt-4o")) {
-      promptPrice = 0.005;
-      completionPrice = 0.015;
-    } else if (lowerModel.includes("gpt-4")) {
-      promptPrice = 0.03;
-      completionPrice = 0.06;
-    } else if (lowerModel.includes("gpt-3.5")) {
-      promptPrice = 0.0005;
-      completionPrice = 0.0015;
-    } else if (lowerModel.includes("claude-3-5")) {
-      promptPrice = 0.003;
-      completionPrice = 0.015;
-    } else if (lowerModel.includes("deepseek")) {
-      promptPrice = 0.00014;
-      completionPrice = 0.00028;
-    }
-
-    return (usage.promptTokens * promptPrice + usage.completionTokens * completionPrice) / 1000;
-  }
-
   private async handleNonStreamingResponse(
     fetchResponse: Response,
     res: ExpressResponse,
@@ -258,21 +250,17 @@ export class LLMProxy {
             promptTokens: responseBody.usage.prompt_tokens,
             completionTokens: responseBody.usage.completion_tokens,
             totalTokens: responseBody.usage.total_tokens,
+            reasoningTokens: responseBody.usage.completion_tokens_details?.reasoning_tokens,
+            cachedTokens: responseBody.usage.prompt_tokens_details?.cached_tokens,
           }
         : undefined,
       providerTraceId,
       providerRequestId,
-      providerHeaders,
-      cost: this.calculateCost(record.request?.body?.model || 'unknown', {
-        promptTokens: responseBody.usage?.prompt_tokens || 0,
-        completionTokens: responseBody.usage?.completion_tokens || 0,
-        totalTokens: responseBody.usage?.total_tokens || 0
-      })
+      providerHeaders
     };
 
-    if (providerRequestId) {
-      console.log(`[PROXY] providerRequestId=${providerRequestId} for traceId=${record.traceId}`);
-    }
+    const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
+    console.log(`[RESP #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
 
     this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
@@ -384,21 +372,17 @@ export class LLMProxy {
         usage: usage ? {
           promptTokens: usage.prompt_tokens,
           completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens
+          totalTokens: usage.total_tokens,
+          reasoningTokens: usage.completion_tokens_details?.reasoning_tokens,
+          cachedTokens: usage.prompt_tokens_details?.cached_tokens,
         } : undefined,
         providerTraceId,
         providerRequestId,
-        providerHeaders,
-        cost: this.calculateCost(record.request?.body?.model || 'unknown', usage ? {
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens
-        } : undefined)
+        providerHeaders
       };
 
-      if (providerRequestId) {
-        console.log(`[PROXY] providerRequestId=${providerRequestId} for traceId=${record.traceId}`);
-      }
+      const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
+      console.log(`[RESP #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
 
       this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)

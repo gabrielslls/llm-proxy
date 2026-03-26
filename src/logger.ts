@@ -70,14 +70,6 @@ export class CallLogger {
           
           // 写入请求级日志
           await this.writeRequestLog(record);
-          
-          if (record.request) {
-            console.log(`[LOG] traceId=${record.traceId} ${record.request.method} ${record.request.path}`);
-          } else if (record.error) {
-            console.log(`[LOG ERROR] traceId=${record.traceId} - ${record.error.message || 'unknown error'}`);
-          } else {
-            console.log(`[LOG] traceId=${record.traceId} ERROR unknown`);
-          }
           resolve();
         } catch (error) {
           console.error(`[LOG ERROR] Failed to write log: ${error}`);
@@ -115,9 +107,12 @@ export class CallLogger {
     const durationSec = (duration / 1000).toFixed(2);
     const usage = record.response?.usage;
     const tokens = usage ? `${usage.promptTokens}+${usage.completionTokens}` : '-';
-    const cost = record.response?.cost !== undefined ? `$${record.response.cost.toFixed(4)}` : '-';
+    
+    const reasoningPart = usage?.reasoningTokens ? `+${usage.reasoningTokens}r` : '';
+    const cachedPart = usage?.cachedTokens ? `-${usage.cachedTokens}c` : '';
+    const extendedTokens = usage ? `${tokens}${reasoningPart}${cachedPart}` : '-';
 
-    const logLine = `${numberLabel} ${date} ${time} | ${clientIp} | ${model} | Tokens:${tokens} | Cost:${cost} | Req:${(reqSize/1024).toFixed(1)}KB | Resp:${(respSize/1024).toFixed(1)}KB | ${respTime} | ${status} | ${durationSec}s | ${providerReqId}
+    const logLine = `${numberLabel} ${date} ${time} | ${clientIp} | ${model} | Tokens:${extendedTokens} | Req:${(reqSize/1024).toFixed(1)}KB | Resp:${(respSize/1024).toFixed(1)}KB | ${respTime} | ${status} | ${durationSec}s | ${providerReqId}
 `;
 
     await appendFile(this.requestLogPath, logLine, "utf-8");

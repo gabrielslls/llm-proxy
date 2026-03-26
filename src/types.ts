@@ -63,11 +63,12 @@ export interface CallRecord {
       promptTokens: number;
       completionTokens: number;
       totalTokens: number;
+      reasoningTokens?: number;
+      cachedTokens?: number;
     };
     providerTraceId?: string;
     providerRequestId?: string;
     providerHeaders?: Record<string, string>;
-    cost?: number;
   };
   error?: {
     message: string;
@@ -79,8 +80,8 @@ export interface CallRecord {
 export interface Statistics {
   successCount: number;
   failureCount: number;
+  rateLimitCount: number;
   totalTokens: number;
-  totalCost: number;
   averageResponseTime: number | string;
   totalRequests: number;
   startTime: string;
