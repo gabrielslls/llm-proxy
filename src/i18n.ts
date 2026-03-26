@@ -20,6 +20,16 @@ type TranslationKeys = {
   tokenNotice: string;
   startupHint: string;
   startupTokenWarning: string;
+  selectPlanType: string;
+  planTypeRequests: string;
+  planTypeTokens: string;
+  enterTotalLimit: string;
+  enterStartingCount: string;
+  planConfigComplete: string;
+  planType: string;
+  totalLimit: string;
+  startingCount: string;
+  currentUsage: string;
 };
 
 const translations: Record<'en' | 'zh', TranslationKeys> = {
@@ -37,6 +47,16 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     tokenNotice: '⚠️ Note: Token counts are for reference only',
     startupHint: 'ℹ️ Press Enter to view statistics, double-Enter within 2s to exit',
     startupTokenWarning: '⚠️ Note: Token counts are untested, for reference only',
+    selectPlanType: 'Select plan type:',
+    planTypeRequests: 'Requests counting',
+    planTypeTokens: 'Tokens counting',
+    enterTotalLimit: 'Enter total limit:',
+    enterStartingCount: 'Enter starting count (number or %):',
+    planConfigComplete: 'Plan configuration complete',
+    planType: 'Plan type',
+    totalLimit: 'Total limit',
+    startingCount: 'Starting count',
+    currentUsage: 'Current usage',
   },
   zh: {
     globalStats: '全局统计 (自 {time} 起)',
@@ -52,6 +72,16 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     tokenNotice: '⚠️ 提示：token数量未经测试，仅供参考',
     startupHint: 'ℹ️ 按回车查看统计，2秒内连按两次回车退出',
     startupTokenWarning: '⚠️ 提示：token数量未经测试，仅供参考',
+    selectPlanType: '选择限额类型：',
+    planTypeRequests: '次数记账',
+    planTypeTokens: 'Token 记账',
+    enterTotalLimit: '输入总限额：',
+    enterStartingCount: '输入起始计数（数字或百分比）：',
+    planConfigComplete: '限额配置完成',
+    planType: '限额类型',
+    totalLimit: '总限额',
+    startingCount: '起始计数',
+    currentUsage: '当前使用',
   },
 };
 

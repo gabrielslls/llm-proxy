@@ -1,8 +1,9 @@
 import { LLMProxy } from "./proxy";
-import { ProxyConfig } from "./types";
+import { ProxyConfig, CodingPlanConfig } from "./types";
 import { StatisticsTracker } from "./statistics";
 import { ConsoleStats } from "./console";
 import { resolve } from "path";
+import { promptForPlanConfig } from "./plan-config";
 
 // 全局异常处理
 process.on('uncaughtException', (error) => {
@@ -27,18 +28,20 @@ Options:
   --log-dir <path>         日志文件目录 (默认: ./logs)
   --log-payloads           记录完整 API 请求和响应报文 (JSONL 格式)
   --codingplan-limit <num> 编码计划请求次数限制 (仅统计显示, 不阻止请求)
+  --plan                   交互式配置编码计划 (requests/tokens limit + starting count)
   --help                   显示帮助信息
   --version                输出版本号
 `);
 }
 
-function parseArgs() {
+function parseArgs(): { config: ProxyConfig; codingplanLimit?: number; planConfig?: CodingPlanConfig } {
   const args = process.argv.slice(2);
   let target: string | undefined;
   let port = 8000;
   let logDir = "./logs";
   let logPayloads = false;
   let codingplanLimit: number | undefined;
+  let usePlan = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -57,6 +60,9 @@ function parseArgs() {
         break;
       case "--codingplan-limit":
         codingplanLimit = parseInt(args[++i], 10);
+        break;
+      case "--plan":
+        usePlan = true;
         break;
       case "--help":
         printHelp();
@@ -86,11 +92,22 @@ function parseArgs() {
     logPayloads,
   };
 
-  return { config, codingplanLimit };
+  return { config, codingplanLimit, planConfig: undefined };
 }
 
-const { config, codingplanLimit } = parseArgs();
-const statisticsTracker = new StatisticsTracker(codingplanLimit);
-const proxy = new LLMProxy(config, statisticsTracker);
-new ConsoleStats(statisticsTracker);
-proxy.start();
+async function main() {
+  const { config, codingplanLimit, planConfig } = parseArgs();
+  
+  let effectivePlanConfig = planConfig;
+  if (planConfig === undefined && process.argv.includes('--plan')) {
+    console.log('\n--- 交互式编码计划配置 ---');
+    effectivePlanConfig = await promptForPlanConfig();
+  }
+  
+  const statisticsTracker = new StatisticsTracker(codingplanLimit, effectivePlanConfig);
+  const proxy = new LLMProxy(config, statisticsTracker);
+  new ConsoleStats(statisticsTracker);
+  proxy.start();
+}
+
+main();

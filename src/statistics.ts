@@ -1,4 +1,4 @@
-import type { CallRecord, Statistics } from './types';
+import type { CallRecord, Statistics, CodingPlanConfig } from './types';
 
 export class StatisticsTracker {
   private successCount: number = 0;
@@ -9,11 +9,24 @@ export class StatisticsTracker {
   private totalRequests: number = 0;
   private startTime: string;
   private codingplanLimit?: number;
+  private codingplanConfig?: CodingPlanConfig;
+  private currentUsage: number = 0;
 
-  constructor(codingplanLimit?: number) {
+  constructor(codingplanLimit?: number, codingplanConfig?: CodingPlanConfig) {
     this.startTime = new Date().toISOString();
-    if (codingplanLimit && codingplanLimit > 0) {
+    if (codingplanConfig && codingplanConfig.limit > 0) {
+      this.codingplanConfig = codingplanConfig;
+      this.codingplanLimit = codingplanConfig.limit;
+      this.currentUsage = codingplanConfig.startingCount;
+    } else if (codingplanLimit && codingplanLimit > 0) {
+      // Backward compatibility: create config for requests type
       this.codingplanLimit = codingplanLimit;
+      this.codingplanConfig = {
+        type: 'requests',
+        limit: codingplanLimit,
+        startingCount: 0
+      };
+      this.currentUsage = 0;
     }
   }
 
@@ -27,6 +40,15 @@ export class StatisticsTracker {
     if (isSuccess) {
       this.successCount++;
       this.totalTokens += record.response?.usage?.totalTokens || 0;
+
+      // Update currentUsage based on plan type
+      if (this.codingplanConfig) {
+        if (this.codingplanConfig.type === 'requests') {
+          this.currentUsage += 1;
+        } else if (this.codingplanConfig.type === 'tokens') {
+          this.currentUsage += record.response?.usage?.totalTokens || 0;
+        }
+      }
     } else if (isRateLimit) {
       this.rateLimitCount++;
     } else {
@@ -53,10 +75,12 @@ export class StatisticsTracker {
       startTime: this.startTime
     };
 
-    if (this.codingplanLimit) {
-      stats.codingplanLimit = this.codingplanLimit;
-      stats.remaining = Math.max(this.codingplanLimit - this.successCount, 0);
-      stats.usagePercent = (this.successCount / this.codingplanLimit) * 100;
+    if (this.codingplanConfig) {
+      stats.codingplanLimit = this.codingplanConfig.limit;
+      stats.codingplanType = this.codingplanConfig.type;
+      stats.startingCount = this.codingplanConfig.startingCount;
+      stats.remaining = Math.max(this.codingplanConfig.limit - this.currentUsage, 0);
+      stats.usagePercent = (this.currentUsage / this.codingplanConfig.limit) * 100;
     }
 
     return stats;

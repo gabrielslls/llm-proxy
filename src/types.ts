@@ -77,6 +77,14 @@ export interface CallRecord {
   durationMs?: number;
 }
 
+export type CodingPlanType = 'requests' | 'tokens';
+
+export interface CodingPlanConfig {
+  type: CodingPlanType;
+  limit: number;
+  startingCount: number;
+}
+
 export interface Statistics {
   successCount: number;
   failureCount: number;
@@ -86,6 +94,8 @@ export interface Statistics {
   totalRequests: number;
   startTime: string;
   codingplanLimit?: number;
+  codingplanType?: CodingPlanType;
+  startingCount?: number;
   remaining?: number;
   usagePercent?: number;
 }
