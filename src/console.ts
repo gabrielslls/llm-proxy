@@ -146,6 +146,7 @@ export class ConsoleStats {
     lines.push(createContentLine(headerContent));
     lines.push(createHorizontalLine('├', '─', '┤'));
     lines.push(createContentLine(alignRight(t.successRequests, formatNumber(stats.successCount), contentWidth)));
+    lines.push(createContentLine(alignRight(t.rateLimitedRequests, formatNumber(stats.rateLimitCount), contentWidth)));
     lines.push(createContentLine(alignRight(t.failedRequests, formatNumber(stats.failureCount), contentWidth)));
     lines.push(createContentLine(alignRight(t.totalTokens, formatNumber(stats.totalTokens), contentWidth)));
     lines.push(createContentLine(alignRight(t.avgResponseTime, formatResponseTime(stats.averageResponseTime), contentWidth)));

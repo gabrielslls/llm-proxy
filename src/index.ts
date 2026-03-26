@@ -24,23 +24,21 @@ Required:
   --target <url>    目标 API 地址
 
 Options:
-  --port <number>          监听端口 (默认: 8000)
+  --port <number>          监听端口 (默认: 9000)
   --log-dir <path>         日志文件目录 (默认: ./logs)
   --log-payloads           记录完整 API 请求和响应报文 (JSONL 格式)
-  --codingplan-limit <num> 编码计划请求次数限制 (仅统计显示, 不阻止请求)
   --plan                   交互式配置编码计划 (requests/tokens limit + starting count)
   --help                   显示帮助信息
   --version                输出版本号
 `);
 }
 
-function parseArgs(): { config: ProxyConfig; codingplanLimit?: number; planConfig?: CodingPlanConfig } {
+function parseArgs(): { config: ProxyConfig; planConfig?: CodingPlanConfig } {
   const args = process.argv.slice(2);
   let target: string | undefined;
-  let port = 8000;
+  let port = 9000;
   let logDir = "./logs";
   let logPayloads = false;
-  let codingplanLimit: number | undefined;
   let usePlan = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -57,9 +55,6 @@ function parseArgs(): { config: ProxyConfig; codingplanLimit?: number; planConfi
         break;
       case "--log-payloads":
         logPayloads = true;
-        break;
-      case "--codingplan-limit":
-        codingplanLimit = parseInt(args[++i], 10);
         break;
       case "--plan":
         usePlan = true;
@@ -92,11 +87,11 @@ function parseArgs(): { config: ProxyConfig; codingplanLimit?: number; planConfi
     logPayloads,
   };
 
-  return { config, codingplanLimit, planConfig: undefined };
+  return { config, planConfig: undefined };
 }
 
 async function main() {
-  const { config, codingplanLimit, planConfig } = parseArgs();
+  const { config, planConfig } = parseArgs();
   
   let effectivePlanConfig = planConfig;
   if (planConfig === undefined && process.argv.includes('--plan')) {
@@ -104,7 +99,7 @@ async function main() {
     effectivePlanConfig = await promptForPlanConfig();
   }
   
-  const statisticsTracker = new StatisticsTracker(codingplanLimit, effectivePlanConfig);
+  const statisticsTracker = new StatisticsTracker(effectivePlanConfig);
   const proxy = new LLMProxy(config, statisticsTracker);
   new ConsoleStats(statisticsTracker);
   proxy.start();

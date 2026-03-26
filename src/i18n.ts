@@ -10,6 +10,7 @@ type TranslationKeys = {
   globalStats: string;
   successRequests: string;
   failedRequests: string;
+  rateLimitedRequests: string;
   totalTokens: string;
   avgResponseTime: string;
   codingPlanLimit: string;
@@ -37,6 +38,7 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     globalStats: 'Global Statistics (since {time})',
     successRequests: 'Success requests',
     failedRequests: 'Failed requests',
+    rateLimitedRequests: 'Rate limited',
     totalTokens: 'Total tokens consumed',
     avgResponseTime: 'Average response time',
     codingPlanLimit: 'CodingPlan limit',
@@ -62,6 +64,7 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     globalStats: '全局统计 (自 {time} 起)',
     successRequests: '成功请求',
     failedRequests: '失败请求',
+    rateLimitedRequests: '限流请求',
     totalTokens: '总 Token 消耗',
     avgResponseTime: '平均响应时间',
     codingPlanLimit: 'CodingPlan 限额',

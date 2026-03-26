@@ -12,21 +12,12 @@ export class StatisticsTracker {
   private codingplanConfig?: CodingPlanConfig;
   private currentUsage: number = 0;
 
-  constructor(codingplanLimit?: number, codingplanConfig?: CodingPlanConfig) {
+  constructor(codingplanConfig?: CodingPlanConfig) {
     this.startTime = new Date().toISOString();
     if (codingplanConfig && codingplanConfig.limit > 0) {
       this.codingplanConfig = codingplanConfig;
       this.codingplanLimit = codingplanConfig.limit;
       this.currentUsage = codingplanConfig.startingCount;
-    } else if (codingplanLimit && codingplanLimit > 0) {
-      // Backward compatibility: create config for requests type
-      this.codingplanLimit = codingplanLimit;
-      this.codingplanConfig = {
-        type: 'requests',
-        limit: codingplanLimit,
-        startingCount: 0
-      };
-      this.currentUsage = 0;
     }
   }
 

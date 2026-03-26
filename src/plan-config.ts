@@ -1,4 +1,5 @@
 import * as readline from 'readline';
+import { t } from './i18n';
 
 export interface CodingPlanConfig {
   type: 'requests' | 'tokens';
@@ -25,7 +26,7 @@ export async function promptForPlanConfig(): Promise<CodingPlanConfig> {
   const rl = createInterface();
 
   try {
-    const typeAnswer = await question(rl, 'Select plan type:\n1) Requests counting\n2) Tokens counting\n> ');
+    const typeAnswer = await question(rl, `${t.selectPlanType}\n1) ${t.planTypeRequests}\n2) ${t.planTypeTokens}\n> `);
     let type: 'requests' | 'tokens';
     if (typeAnswer === '1') {
       type = 'requests';
@@ -35,13 +36,13 @@ export async function promptForPlanConfig(): Promise<CodingPlanConfig> {
       throw new Error('Invalid plan type. Please enter 1 or 2.');
     }
 
-    const limitStr = await question(rl, 'Enter total limit: ');
+    const limitStr = await question(rl, `${t.enterTotalLimit} `);
     const limit = parseFloat(limitStr);
     if (isNaN(limit) || limit <= 0) {
       throw new Error('Invalid limit. Please enter a positive number.');
     }
 
-    const startingCountStr = await question(rl, 'Enter starting count (number or %): ');
+    const startingCountStr = await question(rl, `${t.enterStartingCount} `);
     let startingCount: number;
 
     if (startingCountStr.endsWith('%')) {

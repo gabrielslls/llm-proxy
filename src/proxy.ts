@@ -149,7 +149,7 @@ export class LLMProxy {
               providerRequestId,
             };
             const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-            console.log(`[RESP #${retryNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+            console.log(`[RESP RETRY #${retryNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
           } else {
             const errorNumber = ++this.errorCount;
             record.errorNumber = errorNumber;
@@ -160,7 +160,7 @@ export class LLMProxy {
               providerRequestId,
             };
             const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-            console.log(`[RESP #${errorNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+            console.log(`[RESP ERROR #${errorNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
           }
           
           this.logger.logError(record, new Error(`HTTP ${fetchResponse.status}: ${errorBody}`)).catch(err => 
@@ -189,7 +189,7 @@ export class LLMProxy {
           record.errorNumber = errorNumber;
           record.durationMs = durationMs || (Date.now() - startTime);
           record.responseTimestamp = new Date().toISOString();
-           console.log(`[RESP #${errorNumber}] traceId=${traceId} status=EXCEPTION ${(error as Error).message}`);
+           console.log(`[RESP EXCEPTION #${errorNumber}] traceId=${traceId} status=EXCEPTION ${(error as Error).message}`);
           this.logger.logError(record, error as Error).catch(err => 
         console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
       );
@@ -260,7 +260,7 @@ export class LLMProxy {
     };
 
     const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-    console.log(`[RESP #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+    console.log(`[RESP SUCCESS #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
 
     this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
@@ -382,7 +382,7 @@ export class LLMProxy {
       };
 
       const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-      console.log(`[RESP #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+      console.log(`[RESP SUCCESS #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
 
       this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
