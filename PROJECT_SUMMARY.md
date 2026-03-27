@@ -378,5 +378,63 @@ wc -l logs/calls.jsonl
 
 ---
 
+## 12. CodingPlan 限额统计功能 (2026-03-27 新增)
+
+### 12.1 功能概述
+
+通过 `--plan` 参数启动交互式配置，支持两种统计模式：
+- **Requests 模式**：按请求数量统计（适用于流式和非流式）
+- **Tokens 模式**：按 Token 数量统计（仅适用于非流式请求）
+
+### 12.2 使用方法
+
+```bash
+npm start -- --target https://api.openai.com/v1 --plan
+```
+
+启动后会提示：
+1. 选择统计模式（Requests 或 Tokens）
+2. 输入限额值
+
+### 12.3 统计显示
+
+按 Enter 键显示统计面板：
+
+```
+┌─────────────────────────────────────────┐
+│Global Statistics (since 2026-03-27 ...) │
+├─────────────────────────────────────────┤
+│Success requests:      342               │
+│Failed requests:        0                │
+│Total tokens consumed: 12,345            │
+│Average response time: 234ms             │
+├─────────────────────────────────────────┤
+│CodingPlan limit:     1,200              │
+│Used:                  342               │
+│Remaining:             858               │
+│Usage:                28.5%              │
+└─────────────────────────────────────────┘
+```
+
+### 12.4 已知限制
+
+**Token 统计模式限制**：
+- 仅适用于**非流式请求**（`stream: false`）
+- 流式响应通常不包含 `usage` 数据
+- 流式请求的 Token 统计值为 0
+- 如主要使用流式 API，建议选择 Requests 模式
+
+### 12.5 相关文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/plan-config.ts` | 交互式配置逻辑 |
+| `src/statistics.ts` | 双模式统计实现 |
+| `src/console.ts` | 限额统计显示 |
+| `src/i18n.ts` | 多语言支持 |
+
+---
+
 **项目完成日期**: 2026-03-14
 **项目状态**: ✅ 完成并测试通过
+**最后更新**: 2026-03-27 (新增 CodingPlan 功能)

@@ -37,7 +37,7 @@ export async function promptForPlanConfig(): Promise<CodingPlanConfig> {
     }
 
     const limitStr = await question(rl, `${t.enterTotalLimit} `);
-    const limit = parseFloat(limitStr);
+    const limit = parseFloat(limitStr.replace(/,/g, ''));
     if (isNaN(limit) || limit <= 0) {
       throw new Error('Invalid limit. Please enter a positive number.');
     }
@@ -47,17 +47,23 @@ export async function promptForPlanConfig(): Promise<CodingPlanConfig> {
 
     if (startingCountStr.endsWith('%')) {
       const percentageStr = startingCountStr.slice(0, -1).trim();
-      const percentage = parseFloat(percentageStr);
+      const percentage = parseFloat(percentageStr.replace(/,/g, ''));
       if (isNaN(percentage)) {
         throw new Error('Invalid percentage. Please enter a valid number.');
+      }
+      if (percentage > 100) {
+        throw new Error(t.percentageExceedsLimit);
       }
       startingCount = limit * percentage / 100;
     } else if (startingCountStr.trim() === '') {
       startingCount = 0;
     } else {
-      const parsed = parseFloat(startingCountStr);
+      const parsed = parseFloat(startingCountStr.replace(/,/g, ''));
       if (isNaN(parsed)) {
         throw new Error('Invalid starting count. Please enter a number or percentage.');
+      }
+      if (parsed > limit) {
+        throw new Error(t.startingCountExceedsLimit);
       }
       startingCount = parsed;
     }

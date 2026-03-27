@@ -189,7 +189,9 @@ export class LLMProxy {
           record.errorNumber = errorNumber;
           record.durationMs = durationMs || (Date.now() - startTime);
           record.responseTimestamp = new Date().toISOString();
-           console.log(`[RESP EXCEPTION #${errorNumber}] traceId=${traceId} status=EXCEPTION ${(error as Error).message}`);
+          const errorMsg = (error as Error).message;
+          const errorStack = (error as Error).stack?.split('\n')[0] || '';
+          console.log(`[RESP EXCEPTION #${errorNumber}] traceId=${traceId} status=EXCEPTION ${errorMsg}${errorStack ? ' | ' + errorStack : ''}`);
           this.logger.logError(record, error as Error).catch(err => 
         console.error(`[LOG ERROR] Failed to log error ${traceId}:`, err)
       );
@@ -318,19 +320,22 @@ export class LLMProxy {
         
         const chunk = decoder.decode(value, { stream: true });
         
-        // 尝试从chunk中提取usage信息
         try {
           if (chunk.startsWith('data: ')) {
-            const jsonStr = chunk.substring(6); // 跳过 "data: "
+            const jsonStr = chunk.substring(6);
             if (jsonStr !== '[DONE]') {
               const chunkData = JSON.parse(jsonStr);
               if (chunkData.usage && typeof chunkData.usage === 'object' && chunkData.usage !== null) {
-                usage = chunkData.usage;
+                const hasValidTokens = chunkData.usage.prompt_tokens > 0 || 
+                                      chunkData.usage.completion_tokens > 0 || 
+                                      chunkData.usage.total_tokens > 0;
+                if (hasValidTokens) {
+                  usage = chunkData.usage;
+                }
               }
             }
           }
         } catch (e) {
-          // 忽略解析错误
         }
         
         // 也尝试从完整内容中提取usage信息

@@ -39,6 +39,16 @@ When you specify `--plan`, the proxy will prompt you to configure:
 | **Requests** / 次数记账 | Counts successful API requests / 统计成功的 API 请求数 | When you have a request-based quota / 当按请求数计费时 |
 | **Tokens** / Token 记账 | Counts total tokens consumed (input + output) / 统计消耗的 Token 总数（输入+输出） | When you have a token-based budget / 当按 Token 量计费时 |
 
+### Known Limitations / 已知限制
+
+**Token Counting Mode / Token 记账模式：**
+- Only works with **non-streaming** requests (`stream: false`)
+- 仅适用于**非流式**请求 (`stream: false`)
+- Streaming responses typically do not include usage data from API providers
+- 流式响应通常不包含 API 厂商返回的 usage 数据
+- For streaming requests, token counts will be 0
+- 流式请求的 Token 计数将为 0
+
 ### Starting Count / 起始计数
 
 You can specify the starting count in two ways:

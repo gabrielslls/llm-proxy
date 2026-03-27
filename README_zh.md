@@ -64,7 +64,7 @@ npm start -- --target <API地址> --port 9000 --log-payloads --plan
 │平均响应时间:         234ms              │
 └─────────────────────────────────────────┘
 
-⚠️ 提示：token数量未经测试，仅供参考
+⚠️ 提示：Token 统计仅适用于非流式请求
 ```
 
 **交互控制：**
@@ -90,6 +90,8 @@ npm start -- --target <API地址> --port 9000 --log-payloads --plan
 ```
 
 注意：在非TTY环境下（Docker、systemd、CI/CD等），统计功能会自动禁用，不影响代理正常运行。
+
+**已知限制：** Token 记账模式（`--plan` → Token 记账）仅适用于非流式请求。流式响应通常不包含 API 厂商返回的 usage 数据，因此流式请求的 Token 计数将为 0。
 
 ## 📋 使用示例
 

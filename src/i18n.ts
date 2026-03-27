@@ -31,6 +31,9 @@ type TranslationKeys = {
   totalLimit: string;
   startingCount: string;
   currentUsage: string;
+  percentageExceedsLimit: string;
+  startingCountExceedsLimit: string;
+  countSyncNotice: string;
 };
 
 const translations: Record<'en' | 'zh', TranslationKeys> = {
@@ -46,9 +49,9 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     remaining: 'Remaining',
     usage: 'Usage',
     warningLimit: '⚠️ Warning: CodingPlan limit reached or exceeded!',
-    tokenNotice: '⚠️ Note: Token counts are for reference only',
+    tokenNotice: '⚠️ Note: Token counting only works for non-streaming requests',
     startupHint: 'ℹ️ Press Enter to view statistics, double-Enter within 2s to exit',
-    startupTokenWarning: '⚠️ Note: Token counts are untested, for reference only',
+    startupTokenWarning: '⚠️ Note: Token counting only works for non-streaming requests',
     selectPlanType: 'Select plan type:',
     planTypeRequests: 'Requests counting',
     planTypeTokens: 'Tokens counting',
@@ -59,6 +62,9 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     totalLimit: 'Total limit',
     startingCount: 'Starting count',
     currentUsage: 'Current usage',
+    percentageExceedsLimit: 'Starting percentage cannot exceed 100%',
+    startingCountExceedsLimit: 'Starting count cannot exceed total limit',
+    countSyncNotice: 'Note: Local counts may differ from cloud provider console. Streaming delays cause lag, console updates may not be real-time.',
   },
   zh: {
     globalStats: '全局统计 (自 {time} 起)',
@@ -72,9 +78,9 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     remaining: '剩余',
     usage: '使用率',
     warningLimit: '⚠️ 警告：CodingPlan 限额已达到或超出！',
-    tokenNotice: '⚠️ 提示：token数量未经测试，仅供参考',
+    tokenNotice: '⚠️ 提示：Token 统计仅适用于非流式请求',
     startupHint: 'ℹ️ 按回车查看统计，2秒内连按两次回车退出',
-    startupTokenWarning: '⚠️ 提示：token数量未经测试，仅供参考',
+    startupTokenWarning: '⚠️ 提示：Token 统计仅适用于非流式请求',
     selectPlanType: '选择限额类型：',
     planTypeRequests: '次数记账',
     planTypeTokens: 'Token 记账',
@@ -85,6 +91,9 @@ const translations: Record<'en' | 'zh', TranslationKeys> = {
     totalLimit: '总限额',
     startingCount: '起始计数',
     currentUsage: '当前使用',
+    percentageExceedsLimit: '起始百分比不能超过 100%',
+    startingCountExceedsLimit: '起始计数不能超过总限额',
+    countSyncNotice: '提示：本地计数可能与云服务商控制台不同步。流式响应导致延迟，控制台可能非实时更新。',
   },
 };
 

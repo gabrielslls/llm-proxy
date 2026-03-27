@@ -95,6 +95,8 @@ When running in an interactive terminal, press **Enter** to view real-time globa
 
 Note: The statistics feature is automatically disabled in non-TTY environments (Docker, systemd, CI/CD, etc.) without affecting normal proxy operation.
 
+**Known Limitation:** Token-based counting (`--plan` → Tokens mode) only works with non-streaming requests. Streaming responses typically do not include usage data from API providers, so token counts will be 0 for streaming requests.
+
 ## 📋 Usage Example / 使用示例
 
 Set the proxy address in your LLM client:

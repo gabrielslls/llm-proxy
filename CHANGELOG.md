@@ -13,6 +13,12 @@
   - 支持从指定百分比开始计数 / Starting count with percentage support (e.g., 1.6% of limit)
   - 控制台显示计划类型和格式化的 Token 数字 / Console display shows plan type and formatted token numbers
 
+#### 已知限制 / Known Limitations
+- **Token 记账模式仅适用于非流式请求** / **Token counting mode only works with non-streaming requests**:
+  - 流式响应通常不包含 API 厂商返回的 usage 数据
+  - Streaming responses typically do not include usage data from API providers
+  - 流式请求的 Token 计数将为 0 / Token counts will be 0 for streaming requests
+
 #### 移除 / Removed
 - **`--codingplan-limit` 参数** (`src/index.ts`):
   - 已移除该参数，请使用 `--plan` 进行交互式配置
@@ -71,8 +77,8 @@
   - 支持100ms按键防抖，避免快速按键重复触发
   - 非TTY环境自动禁用，不影响服务正常启动
   - 统计数据仅保存在内存中，服务重启自动清空
-  - 服务启动时显示操作提示和token未测试警告
-  - 统计显示采用对齐的ASCII表格格式，附带"token数量未经测试，仅供参考"提示
+  - 服务启动时显示操作提示和 Token 统计限制说明
+  - 统计显示采用对齐的ASCII表格格式，附带"Token 统计仅适用于非流式请求"提示
 
 #### 文档
 - 更新 `README.md` / `README_zh.md` - 添加交互式控制台统计功能说明

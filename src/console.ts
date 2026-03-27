@@ -123,7 +123,7 @@ export class ConsoleStats {
     if (stats.codingplanLimit) {
       const codingplanLines = [
         alignRight(t.codingPlanLimit + ':', formatNumber(stats.codingplanLimit), 45),
-        alignRight(t.used + ':', formatNumber(stats.totalRequests), 45),
+        alignRight(t.used + ':', formatNumber(stats.currentUsage || 0), 45),
         alignRight(t.remaining + ':', formatNumber(stats.remaining || 0), 45),
         alignRight(t.usage + ':', `${(stats.usagePercent || 0).toFixed(1)}%`, 45)
       ];
@@ -153,8 +153,11 @@ export class ConsoleStats {
     
     if (stats.codingplanLimit) {
       lines.push(createHorizontalLine('├', '─', '┤'));
+      const typeLabel = stats.codingplanType === 'requests' ? t.planTypeRequests : t.planTypeTokens;
+      lines.push(createContentLine(alignRight(t.planType, typeLabel, contentWidth)));
       lines.push(createContentLine(alignRight(t.codingPlanLimit, formatNumber(stats.codingplanLimit), contentWidth)));
-      lines.push(createContentLine(alignRight(t.used, formatNumber(stats.successCount), contentWidth)));
+      const usedValue = formatNumber(stats.currentUsage || 0);
+      lines.push(createContentLine(alignRight(t.used, usedValue, contentWidth)));
       lines.push(createContentLine(alignRight(t.remaining, formatNumber(stats.remaining || 0), contentWidth)));
       lines.push(createContentLine(alignRight(t.usage, `${(stats.usagePercent || 0).toFixed(1)}%`, contentWidth)));
     }
@@ -164,6 +167,9 @@ export class ConsoleStats {
     console.log('\n' + lines.join('\n') + '\n');
     if (stats.codingplanLimit && stats.usagePercent && stats.usagePercent >= 100) {
       console.log(t.warningLimit + '\n');
+    }
+    if (stats.codingplanLimit) {
+      console.log(t.countSyncNotice + '\n');
     }
     console.log(t.tokenNotice + '\n');
   }

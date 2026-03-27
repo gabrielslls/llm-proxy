@@ -96,6 +96,7 @@ export interface Statistics {
   codingplanLimit?: number;
   codingplanType?: CodingPlanType;
   startingCount?: number;
+  currentUsage?: number;
   remaining?: number;
   usagePercent?: number;
 }

@@ -8,6 +8,15 @@ This document describes manual test steps for validating the LLM proxy statistic
 - 100ms debounce on Enter key presses
 - Double-Enter within 2 seconds to exit the program
 - Statistics stored in memory only (cleared on restart)
+- Interactive CodingPlan configuration via `--plan` parameter
+
+## Known Limitations
+
+**Token Counting Mode:**
+- Only works with **non-streaming** requests (`stream: false`)
+- Streaming responses typically do not include usage data from API providers
+- For streaming requests, token counts will be 0
+- Use "Requests" counting mode if you primarily use streaming
 
 ## Test Prerequisites
 1. Node.js >= 18 installed
@@ -146,3 +155,86 @@ This document describes manual test steps for validating the LLM proxy statistic
 ### Issue: Debounce not working
 - Check that the 100ms threshold is correctly implemented in `console.ts`
 - Verify `lastEnterTime` is being properly updated
+
+---
+
+### Test Case 7: Interactive CodingPlan Configuration (`--plan`)
+**Objective:** Verify the `--plan` parameter launches interactive configuration and statistics display
+
+**Steps:**
+1. Start the proxy with `--plan` flag:
+   ```bash
+   npm start -- --target https://api.openai.com/v1 --plan
+   ```
+2. Observe the interactive prompts:
+   - Select counting mode (Requests or Tokens)
+   - Enter limit value (e.g., 1000)
+3. Send a few test requests
+4. Press Enter to view statistics
+
+**Expected Results:**
+- Interactive configuration prompts appear on startup
+- Statistics panel shows CodingPlan limit section:
+  ```
+  ┌─────────────────────────────────────────┐
+  │CodingPlan limit:     1,000              │
+  │Used:                   XX               │
+  │Remaining:              XX               │
+  │Usage:                XX.X%              │
+  └─────────────────────────────────────────┘
+  ```
+- Usage percentage calculated correctly
+
+---
+
+### Test Case 8: Token Counting Mode (Non-Streaming Only)
+**Objective:** Verify Token counting mode works correctly with non-streaming requests
+
+**Steps:**
+1. Start the proxy with `--plan`, select "Tokens" mode, set limit to 10000:
+   ```bash
+   npm start -- --target https://api.openai.com/v1 --plan
+   ```
+2. Send a **non-streaming** request:
+   ```bash
+   curl http://localhost:9000/chat/completions \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{
+       "model": "gpt-3.5-turbo",
+       "messages": [{"role": "user", "content": "Hello"}],
+       "stream": false
+     }'
+   ```
+3. Press Enter to check statistics
+
+**Expected Results:**
+- Token count increments based on `usage.totalTokens` from API response
+- Statistics show accurate token consumption
+
+---
+
+### Test Case 9: Token Counting Mode (Streaming Limitation)
+**Objective:** Verify Token counting mode returns 0 for streaming requests
+
+**Steps:**
+1. Start the proxy with `--plan`, select "Tokens" mode
+2. Send a **streaming** request:
+   ```bash
+   curl http://localhost:9000/chat/completions \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{
+       "model": "gpt-3.5-turbo",
+       "messages": [{"role": "user", "content": "Hello"}],
+       "stream": true
+     }'
+   ```
+3. Press Enter to check statistics
+
+**Expected Results:**
+- Token count remains 0 (or unchanged)
+- Request count increments normally
+- This is expected behavior: streaming responses do not include usage data
+
+**Workaround:** Use "Requests" counting mode if you primarily use streaming API calls.

@@ -70,6 +70,7 @@ export class StatisticsTracker {
       stats.codingplanLimit = this.codingplanConfig.limit;
       stats.codingplanType = this.codingplanConfig.type;
       stats.startingCount = this.codingplanConfig.startingCount;
+      stats.currentUsage = this.currentUsage;
       stats.remaining = Math.max(this.codingplanConfig.limit - this.currentUsage, 0);
       stats.usagePercent = (this.currentUsage / this.codingplanConfig.limit) * 100;
     }
