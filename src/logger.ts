@@ -44,6 +44,29 @@ export class CallLogger {
 
 
   async log(record: CallRecord): Promise<void> {
+    // When normalization rewrote a response, always log the original body even without --log-payloads
+    if (record.response?.normalized && record.response.originalBody) {
+      const normalizedRecord = {
+        ...record,
+        normalized: true,
+        response: {
+          ...record.response,
+          body: record.response.originalBody,
+        }
+      };
+      return this.writeErrorLog(normalizedRecord as CallRecord);
+    }
+    return this.writeLog(record);
+  }
+
+  private async writeErrorLog(record: CallRecord): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.writeQueue.push({ record, resolve, reject });
+      this.processQueue();
+    });
+  }
+
+  private async writeLog(record: CallRecord): Promise<void> {
     return new Promise((resolve, reject) => {
       this.writeQueue.push({ record, resolve, reject });
       this.processQueue();

@@ -3,12 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import { CallLogger } from "./logger";
 import { StatisticsTracker } from "./statistics";
 import { ProxyConfig, CallRecord } from "./types";
+import { ResponseNormalizer } from "./normalize";
 import { t } from "./i18n";
 
 export class LLMProxy {
   private config: ProxyConfig;
   private logger: CallLogger;
   private statisticsTracker: StatisticsTracker;
+  private normalizer: ResponseNormalizer | null;
   private app: express.Application;
   private successCount: number = 0;
   private errorCount: number = 0;
@@ -18,6 +20,7 @@ export class LLMProxy {
     this.config = config;
     this.logger = new CallLogger(config.logDir, config.logPayloads);
     this.statisticsTracker = statisticsTracker;
+    this.normalizer = config.normalizer?.enabled ? new ResponseNormalizer(config.normalizer) : null;
     this.app = express();
     this.setupMiddleware();
     this.setupRoutes();
@@ -138,29 +141,51 @@ export class LLMProxy {
           const isRateLimit = fetchResponse.status === 429;
           
           const { providerRequestId } = this.extractProviderIds(fetchResponse);
+
+          let finalStatus = fetchResponse.status;
+          let finalBody: string | object = errorBody;
+          let didNormalizeError = false;
+          let originalErrorBody: unknown = undefined;
+
+          if (this.normalizer) {
+            const normalized = this.normalizer.normalizeErrorResponse(errorBody, fetchResponse.status);
+            if (normalized.normalized) {
+              finalStatus = normalized.status;
+              finalBody = normalized.body;
+              didNormalizeError = true;
+              originalErrorBody = { error: errorBody };
+              if (normalized.retryAfter !== undefined) {
+                res.setHeader('retry-after', String(normalized.retryAfter));
+                console.warn(`[NORMALIZE] traceId=${traceId} Set retry-after: ${normalized.retryAfter}s`);
+              }
+              console.warn(`[NORMALIZE] traceId=${traceId} Rewrote error: HTTP ${fetchResponse.status} → ${normalized.status}`);
+            }
+          }
           
           if (isRateLimit) {
             const retryNumber = ++this.retryCount;
             record.errorNumber = retryNumber;
             record.durationMs = durationMs;
             record.response = {
-              status: fetchResponse.status,
-              body: { error: errorBody },
+              status: finalStatus,
+              body: finalBody,
               providerRequestId,
+              ...(didNormalizeError ? { normalized: true, originalBody: originalErrorBody } : {}),
             };
             const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-            console.log(`[RESP RETRY #${retryNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+            console.log(`[RESP RETRY #${retryNumber}] traceId=${traceId} status=${finalStatus} ${durationMs}ms${providerPart}`);
           } else {
             const errorNumber = ++this.errorCount;
             record.errorNumber = errorNumber;
             record.durationMs = durationMs;
             record.response = {
-              status: fetchResponse.status,
-              body: { error: errorBody },
+              status: finalStatus,
+              body: finalBody,
               providerRequestId,
+              ...(didNormalizeError ? { normalized: true, originalBody: originalErrorBody } : {}),
             };
             const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-            console.log(`[RESP ERROR #${errorNumber}] traceId=${traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+            console.log(`[RESP ERROR #${errorNumber}] traceId=${traceId} status=${finalStatus} ${durationMs}ms${providerPart}`);
           }
           
           this.logger.logError(record, new Error(`HTTP ${fetchResponse.status}: ${errorBody}`)).catch(err => 
@@ -171,7 +196,7 @@ export class LLMProxy {
           } catch (err) {
             console.error(`[STATS ERROR] Failed to update statistics for ${traceId}:`, err);
           }
-          res.status(fetchResponse.status).send(errorBody);
+          res.status(finalStatus).json(finalBody);
           return;
         }
 
@@ -243,11 +268,31 @@ export class LLMProxy {
     const responseBody = await fetchResponse.clone().json();
     const { providerTraceId, providerRequestId, providerHeaders } = this.extractProviderIds(fetchResponse);
 
+    let finalBody = responseBody;
+    let finalStatus = fetchResponse.status;
+    let didNormalize = false;
+    let originalBody: unknown = undefined;
+
+    if (this.normalizer && !this.normalizer.isOpenAIFormat(responseBody)) {
+      const result = this.normalizer.normalizeNonStreaming(responseBody, fetchResponse.status);
+      if (result.normalized) {
+        finalBody = result.body;
+        finalStatus = result.status;
+        didNormalize = true;
+        originalBody = responseBody;
+        if (result.retryAfter !== undefined) {
+          res.setHeader('retry-after', String(result.retryAfter));
+          console.warn(`[NORMALIZE] traceId=${record.traceId} Set retry-after: ${result.retryAfter}s`);
+        }
+        console.warn(`[NORMALIZE] traceId=${record.traceId} Rewrote response: HTTP ${fetchResponse.status} → ${result.status}`);
+      }
+    }
+
     record.durationMs = durationMs;
     record.response = {
-      status: fetchResponse.status,
-      body: responseBody,
-      usage: responseBody.usage
+      status: finalStatus,
+      body: finalBody,
+      usage: didNormalize ? undefined : (responseBody.usage
         ? {
             promptTokens: responseBody.usage.prompt_tokens,
             completionTokens: responseBody.usage.completion_tokens,
@@ -255,14 +300,15 @@ export class LLMProxy {
             reasoningTokens: responseBody.usage.completion_tokens_details?.reasoning_tokens,
             cachedTokens: responseBody.usage.prompt_tokens_details?.cached_tokens,
           }
-        : undefined,
+        : undefined),
       providerTraceId,
       providerRequestId,
-      providerHeaders
+      providerHeaders,
+      ...(didNormalize ? { normalized: true, originalBody } : {}),
     };
 
     const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
-    console.log(`[RESP SUCCESS #${record.successNumber}] traceId=${record.traceId} status=${fetchResponse.status} ${durationMs}ms${providerPart}`);
+    console.log(`[RESP SUCCESS #${record.successNumber}] traceId=${record.traceId} status=${finalStatus} ${durationMs}ms${providerPart}`);
 
     this.logger.log(record).catch(err => 
       console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
@@ -282,7 +328,7 @@ export class LLMProxy {
         res.setHeader(key, value);
       }
     }
-    res.status(fetchResponse.status).json(responseBody);
+    res.status(finalStatus).json(finalBody);
   }
 
   private async handleStreamingResponse(
@@ -311,15 +357,29 @@ export class LLMProxy {
     let truncated = false;
     let usage: any = undefined;
 
+    let streamAborted = false;
+
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        res.write(value);
-        
         const chunk = decoder.decode(value, { stream: true });
-        
+
+        // Check for provider error in stream before forwarding to client
+        if (this.normalizer) {
+          const streamResult = this.normalizer.normalizeStreamChunk(chunk);
+          if (streamResult.isError) {
+            const errorData = JSON.stringify(streamResult.errorEvent);
+            res.write(`data: ${errorData}\n\n`);
+            res.write(`data: [DONE]\n\n`);
+            streamAborted = true;
+            break;
+          }
+        }
+
+        res.write(value);
+
         try {
           if (chunk.startsWith('data: ')) {
             const jsonStr = chunk.substring(6);
@@ -338,7 +398,6 @@ export class LLMProxy {
         } catch (e) {
         }
         
-        // 也尝试从完整内容中提取usage信息
         if (!usage) {
           try {
             const lines = fullContent.split('\n');
@@ -355,7 +414,6 @@ export class LLMProxy {
               }
             }
           } catch (e) {
-            // 忽略解析错误
           }
         }
         
@@ -368,6 +426,29 @@ export class LLMProxy {
             fullContent += chunk;
           }
         }
+      }
+
+      if (streamAborted) {
+        record.durationMs = durationMs;
+        record.response = {
+          status: 200,
+          body: { streamed: true, content: fullContent, truncated, aborted: true },
+          providerTraceId,
+          providerRequestId,
+          providerHeaders
+        };
+        const providerPart = providerRequestId ? ` providerReqId=${providerRequestId}` : '';
+        console.log(`[RESP STREAM ABORTED #${record.successNumber}] traceId=${record.traceId} ${durationMs}ms${providerPart}`);
+        this.logger.log(record).catch(err => 
+          console.error(`[LOG ERROR] Failed to log ${record.traceId}:`, err)
+        );
+        try {
+          this.statisticsTracker.addRecord(record);
+        } catch (err) {
+          console.error(`[STATS ERROR] Failed to update statistics for ${record.traceId}:`, err);
+        }
+        res.end();
+        return;
       }
 
       record.durationMs = durationMs;
