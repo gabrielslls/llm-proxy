@@ -53,6 +53,9 @@ npm start -- --target https://api.openai.com/v1
 
 # Full options / 完整参数
 npm start -- --target <target-endpoint> --port 9000 --log-dir ./logs --log-payloads --plan
+
+# With response normalization for non-OpenAI providers (e.g., 讯飞星火)
+npm start -- --target <target-endpoint> --normalize xfyun
 ```
 
 ### Console Statistics

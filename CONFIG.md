@@ -13,6 +13,8 @@ llm-proxy --target <target-url> [options]
 | `--log-dir <path>` | ❌ | `./logs` | Log directory / 日志文件目录 |
 | `--log-payloads` | ❌ | `false` | Log full API payloads in JSONL format / 记录完整 API 请求和响应报文 (JSONL 格式) |
 | `--plan` | ❌ | - | Launch interactive CodingPlan configuration / 启动交互式 CodingPlan 配置 |
+| `--normalize <provider>` | ❌ | - | Enable response normalization for non-OpenAI providers (xfyun, baidu, generic, custom) / 对非 OpenAI 厂商启用响应标准化 |
+| `--normalize-config <path>` | ❌ | - | Path to custom normalization rules JSON file / 自定义标准化规则 JSON 文件路径 |
 | `--help` | ❌ | - | Show help / 显示帮助信息 |
 | `--version` | ❌ | - | Show version / 输出版本号 |
 
@@ -77,6 +79,46 @@ startingCount = 1200 × 0.016 = 19.2
 - Percentage values preserve decimal precision / 百分比值保留小数精度
 - Both modes track from the starting count toward the total limit / 两种模式都从起始计数开始，向总限额累计
 
+## Response Normalization / 响应标准化
+
+The `--normalize` parameter enables normalization of non-OpenAI provider error responses into OpenAI-compatible format. This prevents client crashes when providers return errors in non-standard formats (e.g., HTTP 200 with business error codes in the body).
+
+`--normalize` 参数可启用非 OpenAI 厂商的响应标准化，将其错误响应转换为 OpenAI 兼容格式，避免客户端因无法解析非标准错误格式而崩溃。
+
+### Supported Providers / 支持的厂商
+
+| Provider / 厂商 | Provider Name | Supported Error Codes |
+|----------------|--------------|-----------------------|
+| 讯飞星火 | `xfyun` | 10007, 10008, 10013, 10014, 10016, 10110, 10163, 10404, 10907, 10910, 11200-11203, 11210, 11221 |
+| 百度千帆 | `baidu` | Generic mapping via `error_code` / `error_msg` fields |
+| Generic (通用) | `generic` | Detects `error_code` / `error_msg` fields automatically |
+
+### How It Works / 工作原理
+
+1. **Non-streaming responses**: After receiving the response body, the proxy checks for error indicators (non-zero error codes) in bodies that lack OpenAI's `choices` array. If found, the body is rewritten to OpenAI's `{"error": {"message": "...", "type": "...", "code": "..."}}` format with the appropriate HTTP status code.
+2. **Streaming responses**: Each SSE chunk is inspected before forwarding. If an error chunk is detected, an OpenAI-format error event is injected and the stream is terminated.
+3. **Error responses (HTTP >= 400)**: The error body is parsed and normalized to OpenAI's error format.
+
+### Known Limitations / 已知限制
+
+- Streaming error injection is **best-effort** — headers are already sent (HTTP 200 + text/event-stream) before errors can be detected mid-stream, so the proxy cannot retroactively change the HTTP status code.
+- The normalization is **opt-in only** — without `--normalize`, the proxy remains a pure pass-through.
+
+## Custom Normalization Rules / 自定义标准化规则
+
+Use `--normalize custom --normalize-config rules.json` to load custom error code mappings:
+
+```json
+{
+  "errorCodeField": "errno",
+  "errorMessageField": "errmsg",
+  "codeMappings": {
+    "1001": { "httpStatus": 400, "type": "invalid_request_error", "message": "Custom error message" },
+    "1002": { "httpStatus": 429, "type": "rate_limit", "message": "Rate limit exceeded" }
+  }
+}
+```
+
 ## Examples / 示例
 
 ```bash
@@ -88,10 +130,12 @@ llm-proxy --target https://api.example.com/v1 --port 8080 --log-dir /var/log/llm
 
 # Interactive plan configuration / 交互式计划配置
 llm-proxy --target https://api.example.com/v1 --plan
-# Then follow the prompts:
-# 1. Select "Tokens" mode for token-based tracking
-# 2. Enter total limit: 1000000
-# 3. Enter starting count: 50000 (or 5%)
+
+# Enable response normalization for 讯飞星火
+llm-proxy --target https://api.example.com/v1 --normalize xfyun
+
+# Custom normalization rules
+llm-proxy --target https://api.example.com/v1 --normalize custom --normalize-config ./my-rules.json
 ```
 
 ## Environment Variables / 环境变量适配

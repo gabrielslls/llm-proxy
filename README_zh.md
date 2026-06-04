@@ -49,6 +49,9 @@ npm start -- --target https://api.openai.com/v1
 
 # 启动代理至其他厂商
 npm start -- --target <API地址> --port 9000 --log-payloads --plan
+
+# 启用响应标准化（适配非 OpenAI 协议厂商如讯飞星火）
+npm start -- --target <API地址> --normalize xfyun
 ```
 
 ### 控制台统计功能
